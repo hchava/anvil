@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "anvil-harness"
+version = "0.1.0"
+description = "An evidence-gated agent harness for reliable AI-assisted engineering."
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.11"
+keywords = ["ai", "agents", "code-review", "verification", "claude", "codex", "harness"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+]
+dependencies = [
+    "jsonschema>=4.20.0",
+    "click>=8.1.0",
+]
+
+[project.scripts]
+anvil = "anvil.cli.main:cli"
+
+[project.urls]
+Homepage = "https://github.com/YOUR_USERNAME/anvil"
+Documentation = "https://github.com/YOUR_USERNAME/anvil/tree/main/docs"
+Repository = "https://github.com/YOUR_USERNAME/anvil"
+Issues = "https://github.com/YOUR_USERNAME/anvil/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.mypy]
+python_version = "3.11"
+strict = true

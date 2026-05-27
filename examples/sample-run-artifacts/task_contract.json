@@ -1,0 +1,30 @@
+{
+  "run_id": "RUN-20260527-001",
+  "task_summary": "Add fallback validation to ingestion config path",
+  "goals": [
+    "Ensure missing config keys trigger explicit validation errors",
+    "Add tests covering the missing-key fallback path"
+  ],
+  "non_goals": [
+    "Refactoring the entire config module",
+    "Changing runner behavior"
+  ],
+  "constraints": [
+    "Must not modify src/ingestion/runner.py",
+    "Must maintain backward compatibility with existing config format"
+  ],
+  "forbidden_changes": [
+    "src/ingestion/runner.py"
+  ],
+  "acceptance_criteria": [
+    "New tests fail before change and pass after change",
+    "Existing config tests continue to pass",
+    "No files outside the ingestion config module are modified"
+  ],
+  "risk_assumptions": [
+    "Config path may be shared with other subsystems"
+  ],
+  "human_approval_required_for": [],
+  "status": "accepted",
+  "amendments": []
+}
