@@ -16,13 +16,6 @@ Anvil addresses this by treating LLMs as reasoning workers inside a deterministi
 
 **The core principle:** no claim, plan, or code change advances unless it satisfies deterministic gates, evidence thresholds, guardrail compliance, test passage, and unresolved-issue closure.
 
-## Why this matters
-
-Modern AI coding agents can generate code quickly, but production teams still need evidence, tests, rollback plans, scoped execution, and reviewable decisions. Anvil turns AI-assisted development from an open-ended chat workflow into an auditable engineering workflow.
-
-It is designed for developers who use Claude Code, Codex, or similar coding agents but want deterministic quality gates before trusting AI-generated changes.
-
----
 
 ## Current Status
 
@@ -34,16 +27,15 @@ Anvil is currently in early implementation.
 - ⏳ Next: deterministic controller dry run
 - ⏳ Later: Claude/Codex execution loop
 
-## What makes Anvil different?
 
-Most AI coding tools focus on generation. Anvil focuses on trust.
+## Why this matters
 
-- LLMs are workers, not runtime authorities
-- Every accepted claim must cite evidence
-- Disagreements become structured issues, not chat arguments
-- Code changes execute only through scoped work orders
-- Validation is deterministic: tests, linting, type checks, secret scans, baseline diffs
-- Every run produces reviewable artifacts and a scorecard
+Modern AI coding agents can generate code quickly, but production teams still need evidence, tests, rollback plans, scoped execution, and reviewable decisions. Anvil turns AI-assisted development from an open-ended chat workflow into an auditable engineering workflow.
+
+It is designed for developers who use Claude Code, Codex, or similar coding agents but want deterministic quality gates before trusting AI-generated changes.
+
+---
+
 
 ## Architecture
 
@@ -104,6 +96,18 @@ A project is not a repo. A repo is a shared resource. A task scope is a bounded 
 
 ---
 
+## What makes Anvil different?
+
+Most AI coding tools focus on generation. Anvil focuses on trust.
+
+- LLMs are workers, not runtime authorities
+- Every accepted claim must cite evidence
+- Disagreements become structured issues, not chat arguments
+- Code changes execute only through scoped work orders
+- Validation is deterministic: tests, linting, type checks, secret scans, baseline diffs
+- Every run produces reviewable artifacts and a scorecard
+
+
 ## Key Concepts
 
 ### Deterministic Controller
@@ -120,11 +124,13 @@ Before any code is written, Claude and Codex co-negotiate atomic work orders wit
 
 ### Risk-Routed Modes
 Not every task needs the full adversarial pipeline. A numeric risk score routes tasks to Fast, Standard, or Critical mode — matching rigor to complexity.
+
 | Mode | When | Pipeline Depth |
 |---|---|---|
 | Fast | Config tweaks, typo fixes, simple refactors | Lightweight plan → execute → validate |
 | Standard | Normal feature work, moderate refactors | Full research → review → negotiate → execute → validate |
 | Critical | Production-critical, security-sensitive, cross-system changes | Full adversarial pipeline with human escalation |
+
 
 
 ### Anti-Rationalization
@@ -135,7 +141,7 @@ LLM evaluators consistently identify problems then talk themselves into approvin
 
 ## Quick Start
 
-> Anvil is in active development. Installation commands below show the intended CLI experience.
+> Anvil is in active development. The CLI below shows the intended developer experience; package installation will be enabled in an upcoming milestone.
 
 ```bash
 # Planned package name
