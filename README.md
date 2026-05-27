@@ -16,7 +16,34 @@ Anvil addresses this by treating LLMs as reasoning workers inside a deterministi
 
 **The core principle:** no claim, plan, or code change advances unless it satisfies deterministic gates, evidence thresholds, guardrail compliance, test passage, and unresolved-issue closure.
 
+## Why this matters
+
+Modern AI coding agents can generate code quickly, but production teams still need evidence, tests, rollback plans, scoped execution, and reviewable decisions. Anvil turns AI-assisted development from an open-ended chat workflow into an auditable engineering workflow.
+
+It is designed for developers who use Claude Code, Codex, or similar coding agents but want deterministic quality gates before trusting AI-generated changes.
+
 ---
+
+## Current Status
+
+Anvil is currently in early implementation.
+
+- ✅ Architecture and roadmap finalized
+- 🚧 Milestone 0: JSON schemas and validation fixtures
+- ⏳ Next: local project/repo/run registry
+- ⏳ Next: deterministic controller dry run
+- ⏳ Later: Claude/Codex execution loop
+
+## What makes Anvil different?
+
+Most AI coding tools focus on generation. Anvil focuses on trust.
+
+- LLMs are workers, not runtime authorities
+- Every accepted claim must cite evidence
+- Disagreements become structured issues, not chat arguments
+- Code changes execute only through scoped work orders
+- Validation is deterministic: tests, linting, type checks, secret scans, baseline diffs
+- Every run produces reviewable artifacts and a scorecard
 
 ## Architecture
 
@@ -93,42 +120,38 @@ Before any code is written, Claude and Codex co-negotiate atomic work orders wit
 
 ### Risk-Routed Modes
 Not every task needs the full adversarial pipeline. A numeric risk score routes tasks to Fast, Standard, or Critical mode — matching rigor to complexity.
-
 | Mode | When | Pipeline Depth |
-|------|------|---------------|
-| **Fast** | Config tweaks, typo fixes, simple refactors | Lightweight plan → execute → validate |
-| **Standard** | Normal feature work, moderate refactors | Full research → review → negotiate → execute → validate |
-| **Critical** | Production-critical, security-sensitive, cross-system | Full adversarial pipeline with human escalation |
+|---|---|---|
+| Fast | Config tweaks, typo fixes, simple refactors | Lightweight plan → execute → validate |
+| Standard | Normal feature work, moderate refactors | Full research → review → negotiate → execute → validate |
+| Critical | Production-critical, security-sensitive, cross-system changes | Full adversarial pipeline with human escalation |
+
 
 ### Anti-Rationalization
 LLM evaluators consistently identify problems then talk themselves into approving anyway. Every evaluator agent in Anvil receives explicit instructions: "If a criterion is unmet, fail it. Do not rationalize. Approval requires criterion-by-criterion evidence."
 
 ---
 
+
 ## Quick Start
 
-```bash
-# Install
-pip install anvil-harness
+> Anvil is in active development. Installation commands below show the intended CLI experience.
 
+```bash
+# Planned package name
+pip install anvil-harness
 # Initialize local installation
 anvil init
-
 # Register a repo
 anvil repo register --path /path/to/your/repo --name my-service
-
 # Create a project
 anvil project create --name my-feature --repo my-service
-
 # Run the harness
 anvil run --project my-feature --task "Add input validation to the config parser"
-
 # Check status
 anvil status
-
 # View active leases
 anvil leases --repo my-service
-
 # Health check
 anvil doctor
 ```
@@ -198,7 +221,8 @@ Anvil is in active development. See the [roadmap](docs/roadmap.md) for the full 
 Anvil's design was refined through six rounds of adversarial cross-validation between Claude, Codex (ChatGPT), and GPT — the same multi-model review process it implements. Key design influences:
 
 - **Anthropic's harness research** — generator-evaluator separation, context anxiety, sprint contracts, harness simplification principle
-- **Production experience** — real-world multi-agent orchestration in large-scale engineering workflows
+- **Production-inspired engineering workflow** — based on extensive use of Claude Code + Codex collaboration patterns in real-world data engineering work, rewritten here as a clean-room public implementation.
+
 - **Adversarial review** — every architectural decision challenged by at least two independent models
 
 See [docs/architecture.md](docs/architecture.md) for the full design document.
