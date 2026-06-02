@@ -1,0 +1,18 @@
+{
+  "run_id": "RUN-20260527-001",
+  "raw_issues": [
+    {
+      "raw_issue_id": "RAW-SEC-001",
+      "reviewer": "security",
+      "severity": "high",
+      "title": "Missing input validation.",
+      "detail": "Config keys unchecked."
+    },
+    {
+      "raw_issue_id": "RAW-PERF-002",
+      "reviewer": "performance",
+      "severity": "low",
+      "title": "Redundant parse."
+    }
+  ]
+}

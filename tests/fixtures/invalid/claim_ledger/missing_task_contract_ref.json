@@ -1,0 +1,38 @@
+{
+  "run_id": "RUN-20260527-001",
+  "claims": [
+    {
+      "claim_id": "CLAIM-001",
+      "claim": "load_config is the canonical config entry point.",
+      "claim_type": "code_behavior",
+      "impact": "high",
+      "evidence": [
+        {
+          "source_id": "SRC-001",
+          "source_type": "code",
+          "path": "src/ingestion/config.py",
+          "line_start": 10,
+          "line_end": 42,
+          "symbol": "load_config",
+          "commit_sha": "abc1234",
+          "content_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "checked_at": "2026-05-27T13:21:00Z",
+          "evidence_type": "direct",
+          "supports_claim_because": "Signature and docstring confirm entry point."
+        }
+      ],
+      "counter_evidence": [],
+      "assumptions": [],
+      "confidence": "high",
+      "validated_by": [
+        "claude-research-agent-2"
+      ],
+      "stress_test_result": {
+        "method": "counter_evidence_search",
+        "depth": 0,
+        "outcome": "confirmed",
+        "notes": "No counter-evidence found."
+      }
+    }
+  ]
+}

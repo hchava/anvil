@@ -1,0 +1,46 @@
+{
+  "run_id": "RUN-20260527-001",
+  "issues": [
+    {
+      "issue_id": "ISSUE-001",
+      "title": "Backoff has no maximum ceiling.",
+      "severity": "medium",
+      "raised_by": "codex",
+      "layer": "layer3-cross-validation",
+      "task_contract_ref": [
+        "risk_assumptions[0]"
+      ],
+      "related_claims": [
+        "CLAIM-001"
+      ],
+      "related_sources": [
+        "SRC-001"
+      ],
+      "claude_position": "Unit tests sufficient.",
+      "codex_position": "Shared path needs integration coverage.",
+      "evidence_required_to_close": [
+        "Add ceiling test."
+      ],
+      "resolution": "resolved_by_human",
+      "blocks_work_orders": [
+        "EXEC-002"
+      ],
+      "blocks_layers": [
+        "execution"
+      ],
+      "safe_to_continue_without_resolution": false,
+      "rounds": 1
+    },
+    {
+      "issue_id": "ISSUE-002",
+      "title": "Log wording unclear.",
+      "severity": "low",
+      "raised_by": "claude",
+      "layer": "layer5-review",
+      "resolution": "open",
+      "blocks_work_orders": [],
+      "blocks_layers": [],
+      "safe_to_continue_without_resolution": true
+    }
+  ]
+}

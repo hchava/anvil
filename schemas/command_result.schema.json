@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/command_result.schema.json",
+  "title": "Command Result",
+  "description": "Result of executing a single structured argv command.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "command_id",
+    "command_array",
+    "exit_code",
+    "started_at",
+    "finished_at"
+  ],
+  "properties": {
+    "command_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "command_array": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "exit_code": {
+      "type": "integer"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "duration_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "timed_out": {
+      "type": "boolean"
+    },
+    "stdout_excerpt": {
+      "type": "string"
+    },
+    "stderr_excerpt": {
+      "type": "string"
+    }
+  }
+}

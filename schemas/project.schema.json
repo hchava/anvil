@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/project.schema.json",
+  "title": "Project",
+  "description": "A logical project (business effort) that references one or more shared repositories. A project is not a repo; two projects may safely reference the same repo.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "project_id",
+    "schema_version",
+    "name",
+    "created_at",
+    "repos"
+  ],
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "pattern": "^proj-[A-Za-z0-9._-]+$"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "repos": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Identifiers of shared repositories this project references.",
+      "items": {
+        "type": "string",
+        "pattern": "^repo-[A-Za-z0-9._-]+$"
+      }
+    }
+  }
+}

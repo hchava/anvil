@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/review_findings_consolidated.schema.json",
+  "title": "Review Findings (Consolidated)",
+  "description": "Consolidated findings where every raw issue is accounted for by disposition. Implements the implementation-spec Part 4 consolidation-verification contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "consolidated_issues"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+    },
+    "consolidated_issues": {
+      "type": "array",
+      "description": "May be empty when no raw issues existed.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["raw_issue_ids", "disposition"],
+        "properties": {
+          "consolidated_id": {
+            "type": ["string", "null"],
+            "pattern": "^CONSOL-[0-9]{3,}$"
+          },
+          "raw_issue_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^RAW-[A-Z]+-[0-9]{3,}$"
+            }
+          },
+          "disposition": {
+            "type": "string",
+            "enum": [
+              "preserved",
+              "merged_into",
+              "rejected_with_reason",
+              "converted_to_low_priority"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low", "info"]
+          },
+          "merged_into": {
+            "type": "string",
+            "pattern": "^CONSOL-[0-9]{3,}$"
+          },
+          "merge_reason": {
+            "type": "string"
+          },
+          "rejection_reason": {
+            "type": "string"
+          }
+        },
+        "allOf": [
+          {
+            "description": "A preserved finding must define its own consolidated id, title, and severity.",
+            "if": {
+              "properties": {
+                "disposition": {
+                  "const": "preserved"
+                }
+              }
+            },
+            "then": {
+              "required": ["consolidated_id", "title", "severity"]
+            }
+          },
+          {
+            "description": "A merged finding must name the consolidated issue it merged into, with a reason.",
+            "if": {
+              "properties": {
+                "disposition": {
+                  "const": "merged_into"
+                }
+              }
+            },
+            "then": {
+              "required": ["merged_into", "merge_reason"]
+            }
+          },
+          {
+            "description": "A rejected finding must give a rejection reason.",
+            "if": {
+              "properties": {
+                "disposition": {
+                  "const": "rejected_with_reason"
+                }
+              }
+            },
+            "then": {
+              "required": ["rejection_reason"]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

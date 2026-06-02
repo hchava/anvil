@@ -1,0 +1,17 @@
+{
+  "run_id": "RUN-20260527-001",
+  "issues": [
+    {
+      "issue_id": "ISSUE-003",
+      "title": "Ambiguous retry semantics deferred.",
+      "severity": "high",
+      "raised_by": "codex",
+      "layer": "layer3-cross-validation",
+      "resolution": "deferred",
+      "human_decision_ref": "DEC-002",
+      "blocks_work_orders": [],
+      "blocks_layers": [],
+      "safe_to_continue_without_resolution": false
+    }
+  ]
+}

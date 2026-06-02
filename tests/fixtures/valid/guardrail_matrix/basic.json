@@ -1,0 +1,33 @@
+{
+  "run_id": "RUN-20260527-001",
+  "guardrails": [
+    {
+      "guardrail_id": "SEC-003",
+      "description": "No string-concatenated SQL.",
+      "severity": "critical",
+      "applies": true,
+      "applicability_reason": "Touches data access.",
+      "checked_by": [
+        "security-reviewer"
+      ],
+      "status": "pass",
+      "waiver": null
+    },
+    {
+      "guardrail_id": "TEST-001",
+      "description": "New public functions have tests.",
+      "severity": "high",
+      "applies": true,
+      "checked_by": [
+        "correctness-reviewer"
+      ],
+      "status": "waived",
+      "waiver": {
+        "reason": "Covered by integration test.",
+        "approved_by": "demo-user",
+        "human_required": true,
+        "human_approved": true
+      }
+    }
+  ]
+}

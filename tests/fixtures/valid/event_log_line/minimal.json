@@ -1,0 +1,6 @@
+{
+  "seq": 0,
+  "timestamp": "2026-05-27T13:00:00Z",
+  "event_type": "run_finalized",
+  "actor": "controller"
+}

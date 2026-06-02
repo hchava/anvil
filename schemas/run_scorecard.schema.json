@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/run_scorecard.schema.json",
+  "title": "Run Scorecard",
+  "description": "Per-run metrics for measurement. Implements the implementation-spec 2.10 contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "mode",
+    "final_outcome"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["fast", "standard", "critical"]
+    },
+    "duration_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "token_cost_estimate": {
+      "type": "number",
+      "minimum": 0
+    },
+    "agents_launched": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "risk_score_initial": {
+      "type": "integer"
+    },
+    "risk_score_final": {
+      "type": "integer"
+    },
+    "mode_escalated": {
+      "type": "boolean"
+    },
+    "issues_by_severity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "critical": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "high": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "medium": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "low": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "issues_closed_by_evidence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "issues_deferred_by_human": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "layer_yield": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "issues_opened": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "blocking_issues": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "deterministic_checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tests_passed": {
+          "type": "boolean"
+        },
+        "linters_passed": {
+          "type": "boolean"
+        },
+        "type_checks_passed": {
+          "type": "boolean"
+        },
+        "secret_scan_passed": {
+          "type": "boolean"
+        },
+        "new_test_failures_vs_baseline": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "work_orders_total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "work_orders_passed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "work_orders_reworked": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "task_contract_amendments": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "human_escalations": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "schema_validation_failures": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "agent_retries": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "final_outcome": {
+      "type": "string",
+      "enum": ["passed", "failed", "aborted", "human_deferred"]
+    }
+  }
+}

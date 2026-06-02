@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/agent_quality_report.schema.json",
+  "title": "Agent Quality Report",
+  "description": "Per-agent quality and coverage report. Implements the implementation-spec section 7 quality_report.json contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "agent_id",
+    "input_budget",
+    "coverage",
+    "claims",
+    "uncertainty"
+  ],
+  "properties": {
+    "agent_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["estimated_input_tokens", "max_allowed_input_tokens", "budget_status"],
+      "properties": {
+        "estimated_input_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_allowed_input_tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "budget_status": {
+          "type": "string",
+          "enum": ["safe", "warning", "exceeded"]
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assigned_sources", "sources_read", "sources_skipped"],
+      "properties": {
+        "assigned_sources": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sources_read": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sources_skipped": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claims_emitted", "claims_with_evidence", "unsupported_claims"],
+      "properties": {
+        "claims_emitted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "claims_with_evidence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unsupported_claims": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "uncertainty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["open_questions", "assumptions", "known_gaps"],
+      "properties": {
+        "open_questions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "assumptions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "known_gaps": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

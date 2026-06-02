@@ -1,0 +1,9 @@
+{
+  "keyword": "minItems",
+  "path": [
+    "work_orders",
+    0,
+    "assigned_scope",
+    "allowed_files"
+  ]
+}

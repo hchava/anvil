@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/repo.schema.json",
+  "title": "Repository",
+  "description": "A version-controlled repository registered with Anvil. A repo is a shared resource and is NOT bound to a single project; projects reference repos, not the reverse.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "repo_id",
+    "schema_version",
+    "name",
+    "path",
+    "default_branch",
+    "vcs",
+    "created_at"
+  ],
+  "properties": {
+    "repo_id": {
+      "type": "string",
+      "pattern": "^repo-[A-Za-z0-9._-]+$"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "url": {
+      "type": "string",
+      "minLength": 1
+    },
+    "default_branch": {
+      "type": "string",
+      "minLength": 1
+    },
+    "vcs": {
+      "type": "string",
+      "enum": ["git"]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

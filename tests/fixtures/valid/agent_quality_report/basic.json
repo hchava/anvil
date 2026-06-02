@@ -1,0 +1,23 @@
+{
+  "agent_id": "research-config-001",
+  "input_budget": {
+    "estimated_input_tokens": 42000,
+    "max_allowed_input_tokens": 90000,
+    "budget_status": "safe"
+  },
+  "coverage": {
+    "assigned_sources": 12,
+    "sources_read": 12,
+    "sources_skipped": []
+  },
+  "claims": {
+    "claims_emitted": 18,
+    "claims_with_evidence": 18,
+    "unsupported_claims": 0
+  },
+  "uncertainty": {
+    "open_questions": 2,
+    "assumptions": 3,
+    "known_gaps": 1
+  }
+}

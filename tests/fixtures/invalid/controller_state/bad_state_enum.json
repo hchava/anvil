@@ -1,0 +1,31 @@
+{
+  "run_id": "RUN-20260527-001",
+  "current_state": "CODING",
+  "mode": "standard",
+  "risk_scores": {
+    "initial": 4,
+    "post_discovery": 6,
+    "post_plan": null,
+    "post_execution": null
+  },
+  "state_history": [
+    {
+      "state": "INIT",
+      "entered_at": "2026-05-27T13:00:00Z",
+      "exited_at": "2026-05-27T13:00:12Z"
+    },
+    {
+      "state": "BASELINE_CAPTURED",
+      "entered_at": "2026-05-27T13:00:12Z",
+      "exited_at": "2026-05-27T13:01:45Z"
+    }
+  ],
+  "pending_human_decisions": [],
+  "retry_counts": {
+    "task_contract_schema": 0,
+    "source_discovery": 0
+  },
+  "task_contract_amendments": [],
+  "active_agents": [],
+  "locked_files": []
+}

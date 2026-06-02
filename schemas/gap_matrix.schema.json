@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/gap_matrix.schema.json",
+  "title": "Gap Matrix",
+  "description": "Coverage-area sufficiency analysis. Implements the implementation-spec 2.5 contract so the controller can enforce the gap gate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "coverage_areas",
+    "overall_sufficient"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+    },
+    "coverage_areas": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["area", "required_level", "evidence_found", "gap_status"],
+        "properties": {
+          "area": {
+            "type": "string",
+            "minLength": 1
+          },
+          "required_level": {
+            "type": "string",
+            "enum": ["required", "conditional", "optional"]
+          },
+          "evidence_found": {
+            "type": "boolean"
+          },
+          "source_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^SRC-[0-9]{3,}$"
+            }
+          },
+          "gap_status": {
+            "type": "string",
+            "enum": ["covered", "partial", "gap", "not_applicable"]
+          },
+          "gap_reason": {
+            "type": "string"
+          },
+          "blocking": {
+            "type": "boolean"
+          },
+          "reviewed_by": {
+            "type": "string"
+          },
+          "closure_decision": {
+            "type": "string"
+          }
+        },
+        "allOf": [
+          {
+            "description": "An area marked as a gap must record why and whether it blocks.",
+            "if": {
+              "properties": {
+                "gap_status": {
+                  "const": "gap"
+                }
+              }
+            },
+            "then": {
+              "required": ["gap_reason", "blocking"]
+            }
+          }
+        ]
+      }
+    },
+    "overall_sufficient": {
+      "type": "boolean"
+    }
+  }
+}

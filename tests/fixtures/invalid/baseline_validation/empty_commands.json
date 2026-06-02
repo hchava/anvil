@@ -1,0 +1,8 @@
+{
+  "run_id": "RUN-20260527-001",
+  "schema_version": "0.1.0",
+  "captured_at": "2026-05-27T13:00:30Z",
+  "base_commit": "abc1234",
+  "baseline_green": true,
+  "commands": []
+}

@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/guardrail_matrix.schema.json",
+  "title": "Guardrail Matrix",
+  "description": "Applicable guardrails with pass/fail status and waiver tracking. Implements the implementation-spec 2.8 contract so the controller can drive the guardrail gate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "guardrails"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+    },
+    "guardrails": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["guardrail_id", "description", "severity", "applies", "status"],
+        "properties": {
+          "guardrail_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"]
+          },
+          "applies": {
+            "type": "boolean"
+          },
+          "applicability_reason": {
+            "type": "string"
+          },
+          "checked_by": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pass", "fail", "not_checked", "waived"]
+          },
+          "waiver": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "required": ["reason", "approved_by"],
+            "properties": {
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              },
+              "approved_by": {
+                "type": "string",
+                "minLength": 1
+              },
+              "human_required": {
+                "type": "boolean"
+              },
+              "human_approved": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "description": "A waived guardrail must carry a waiver object (implementation-spec 2.8 gate).",
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "waived"
+                }
+              }
+            },
+            "then": {
+              "required": ["waiver"],
+              "properties": {
+                "waiver": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          {
+            "description": "Waiving a critical, applicable guardrail requires explicit human approval (roadmap guardrail gate, line 365).",
+            "if": {
+              "properties": {
+                "severity": {
+                  "const": "critical"
+                },
+                "applies": {
+                  "const": true
+                },
+                "status": {
+                  "const": "waived"
+                }
+              },
+              "required": ["severity", "applies", "status"]
+            },
+            "then": {
+              "required": ["waiver"],
+              "properties": {
+                "waiver": {
+                  "type": "object",
+                  "required": ["human_approved"],
+                  "properties": {
+                    "human_approved": {
+                      "const": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

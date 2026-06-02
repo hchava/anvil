@@ -1,0 +1,9 @@
+{
+  "keyword": "required",
+  "path": [
+    "claims",
+    0,
+    "evidence",
+    0
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/agent_status.schema.json",
+  "title": "Agent Status",
+  "description": "Checkpoint-based liveness report from a subagent. Implements the implementation-spec section 7 status.json contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "agent_id",
+    "task",
+    "phase",
+    "last_checkpoint"
+  ],
+  "properties": {
+    "agent_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task": {
+      "type": "string",
+      "minLength": 1
+    },
+    "phase": {
+      "type": "string",
+      "enum": ["initializing", "analyzing", "executing", "validating", "completed", "failed"]
+    },
+    "last_checkpoint": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "progress": {
+      "type": "string"
+    },
+    "current_work_order": {
+      "type": "string",
+      "pattern": "^EXEC-(INT-)?[0-9]{3,}$"
+    },
+    "output_files": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "error": {
+      "type": ["string", "null"]
+    }
+  }
+}

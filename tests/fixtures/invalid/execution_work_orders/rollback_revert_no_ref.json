@@ -1,0 +1,122 @@
+{
+  "run_id": "RUN-20260527-001",
+  "work_orders": [
+    {
+      "work_order_id": "EXEC-001",
+      "title": "Add fallback validation",
+      "parent_plan_id": "PLAN-002",
+      "task_contract_ref": [
+        "goals[0]"
+      ],
+      "negotiation_status": "agreed",
+      "agreed_by": [
+        "claude-orchestrator",
+        "codex-validator"
+      ],
+      "criticality": "required",
+      "fail_policy": "fail_closed",
+      "is_integration_wo": false,
+      "assigned_scope": {
+        "allowed_files": [
+          "src/ingestion/config.py",
+          "tests/ingestion/test_config.py"
+        ],
+        "forbidden_files": [
+          "src/ingestion/runner.py"
+        ]
+      },
+      "preconditions": [
+        "worktree is clean"
+      ],
+      "implementation_guidance": {
+        "required_steps": [
+          "Add fallback branch."
+        ],
+        "suggested_steps": [],
+        "forbidden_steps": [
+          "Do not alter runner."
+        ]
+      },
+      "local_acceptance_criteria": [
+        "New test fails before, passes after."
+      ],
+      "global_acceptance_criteria": [
+        "No regression in ingestion suite."
+      ],
+      "validation_commands": [
+        {
+          "command_array": [
+            "pytest",
+            "tests/ingestion/test_config.py"
+          ],
+          "expected_exit_code": 0,
+          "timeout_seconds": 600
+        }
+      ],
+      "rollback_plan": [
+        {
+          "op": "restore_file",
+          "target": "src/ingestion/config.py",
+          "ref": "HEAD"
+        }
+      ],
+      "status": "ready_for_execution"
+    },
+    {
+      "work_order_id": "EXEC-INT-001",
+      "title": "System integration validation",
+      "negotiation_status": "agreed",
+      "agreed_by": [
+        "claude-orchestrator",
+        "codex-validator"
+      ],
+      "criticality": "required",
+      "fail_policy": "fail_closed",
+      "is_integration_wo": true,
+      "assigned_scope": {
+        "allowed_files": [
+          "tests/ingestion/"
+        ]
+      },
+      "local_acceptance_criteria": [
+        "Full affected suite passes."
+      ],
+      "validation_commands": [
+        {
+          "command_array": [
+            "pytest",
+            "tests/ingestion/"
+          ],
+          "expected_exit_code": 0
+        }
+      ],
+      "rollback_plan": [
+        {
+          "op": "revert_commit"
+        }
+      ],
+      "status": "ready_for_execution"
+    }
+  ],
+  "dependency_matrix": [
+    {
+      "work_order_id": "EXEC-001",
+      "depends_on": [],
+      "can_run_parallel": true
+    },
+    {
+      "work_order_id": "EXEC-INT-001",
+      "depends_on": [
+        "EXEC-001"
+      ],
+      "can_run_parallel": false
+    }
+  ],
+  "file_ownership": [
+    {
+      "file_path": "src/ingestion/config.py",
+      "work_order_id": "EXEC-001",
+      "lock_status": "locked"
+    }
+  ]
+}

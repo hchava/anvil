@@ -1,8 +1,8 @@
 {
-  "run_id": "RUN-20260527-001",
+  "run_id": "run-1",
   "created_at": "2026-05-27T13:00:00Z",
   "task_description": "Add fallback validation to ingestion config path",
-  "project_id": "proj-ingestion-hardening",
+  "project_id": "ingestion-hardening",
   "repo_id": "repo-toy-python-service",
   "task_scope": "ingestion-pipeline",
   "initiated_by": "demo-user",
@@ -16,12 +16,10 @@
     "codex_validator": "codex-v1"
   },
   "prompt_versions": {
-    "orchestrator": "orchestrator-v0.1.0",
-    "security_reviewer": "security-reviewer-v0.1.0"
+    "orchestrator": "orchestrator-v0.1.0"
   },
   "prompt_hashes": {
-    "orchestrator": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
-    "security_reviewer": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    "orchestrator": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   },
   "guardrails": {
     "version": "2026-05-20",

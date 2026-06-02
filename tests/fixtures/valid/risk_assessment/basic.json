@@ -1,0 +1,43 @@
+{
+  "run_id": "RUN-20260527-001",
+  "current_mode": "standard",
+  "current_score": 4,
+  "assessments": [
+    {
+      "stage": "initial",
+      "score": 4,
+      "factors": [
+        {
+          "factor": "production_runtime_path",
+          "value": 3,
+          "reason": "Touches ingestion runtime."
+        }
+      ],
+      "mode": "standard",
+      "mode_changed": false,
+      "assessed_by": [
+        "claude-orchestrator"
+      ],
+      "timestamp": "2026-05-27T13:02:00Z"
+    },
+    {
+      "stage": "post_discovery",
+      "score": 6,
+      "factors": [
+        {
+          "factor": "shared_config_path",
+          "value": 2,
+          "reason": "Config path shared."
+        }
+      ],
+      "mode": "critical",
+      "mode_changed": true,
+      "escalation_reason": "Shared config path discovered.",
+      "assessed_by": [
+        "claude-orchestrator",
+        "codex-validator"
+      ],
+      "timestamp": "2026-05-27T13:20:00Z"
+    }
+  ]
+}

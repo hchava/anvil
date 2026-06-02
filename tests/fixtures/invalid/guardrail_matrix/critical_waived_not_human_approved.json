@@ -1,0 +1,21 @@
+{
+  "run_id": "RUN-20260527-001",
+  "guardrails": [
+    {
+      "guardrail_id": "SEC-003",
+      "description": "No string-concatenated SQL.",
+      "severity": "critical",
+      "applies": true,
+      "checked_by": [
+        "security-reviewer"
+      ],
+      "status": "waived",
+      "waiver": {
+        "reason": "legacy query",
+        "approved_by": "demo-user",
+        "human_required": true,
+        "human_approved": false
+      }
+    }
+  ]
+}

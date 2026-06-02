@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-05-27T13:03:01Z",
+  "event_type": "state_transition",
+  "actor": "controller",
+  "state_before": "BASELINE_CAPTURED",
+  "state_after": "TASK_CONTRACT_PROPOSED",
+  "details": {
+    "trigger": "claude_returned_contract"
+  }
+}

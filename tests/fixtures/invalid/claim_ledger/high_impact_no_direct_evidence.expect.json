@@ -1,0 +1,8 @@
+{
+  "keyword": "contains",
+  "path": [
+    "claims",
+    0,
+    "evidence"
+  ]
+}

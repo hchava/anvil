@@ -1,0 +1,251 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/claim_ledger.schema.json",
+  "title": "Claim Ledger",
+  "description": "Research claims with structured evidence. Implements the implementation-spec 2.6 contract plus the Milestone 0 hardening (minItems on claims, task_contract_ref required, structured counter-evidence, direct-evidence gate for high-impact claims).",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "source_type", "evidence_type", "supports_claim_because"],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "pattern": "^SRC-[0-9]{3,}$"
+        },
+        "source_type": {
+          "type": "string",
+          "enum": [
+            "code",
+            "test",
+            "config",
+            "migration",
+            "api_contract",
+            "ci_cd",
+            "doc",
+            "post",
+            "runbook",
+            "lockfile",
+            "other"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "line_start": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "line_end": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "commit_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{7,40}$"
+        },
+        "content_hash": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "checked_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "evidence_type": {
+          "type": "string",
+          "enum": ["direct", "indirect", "negative", "counter"]
+        },
+        "supports_claim_because": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "description": "Code-bearing evidence must pin a commit SHA, a line range, and a content hash (architecture evidence-freshness policy).",
+          "if": {
+            "properties": {
+              "source_type": {
+                "enum": ["code", "test", "config", "migration", "lockfile"]
+              }
+            },
+            "required": ["source_type"]
+          },
+          "then": {
+            "required": ["commit_sha", "line_start", "line_end", "content_hash"]
+          }
+        },
+        {
+          "description": "Document, runbook, and post evidence must record a checked_at timestamp and content hash.",
+          "if": {
+            "properties": {
+              "source_type": {
+                "enum": ["doc", "runbook", "post"]
+              }
+            },
+            "required": ["source_type"]
+          },
+          "then": {
+            "required": ["checked_at", "content_hash"]
+          }
+        }
+      ]
+    }
+  },
+  "required": [
+    "run_id",
+    "claims"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+    },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "claim_id",
+          "claim",
+          "claim_type",
+          "impact",
+          "task_contract_ref",
+          "evidence",
+          "confidence",
+          "validated_by"
+        ],
+        "properties": {
+          "claim_id": {
+            "type": "string",
+            "pattern": "^CLAIM-[0-9]{3,}$"
+          },
+          "claim": {
+            "type": "string",
+            "minLength": 1
+          },
+          "claim_type": {
+            "type": "string",
+            "enum": [
+              "code_behavior",
+              "requirement_interpretation",
+              "dependency_behavior",
+              "performance_assumption",
+              "security_assumption",
+              "test_coverage",
+              "operational",
+              "historical"
+            ]
+          },
+          "impact": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"]
+          },
+          "task_contract_ref": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Every claim must trace back to the task contract.",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/evidence"
+            }
+          },
+          "counter_evidence": {
+            "type": "array",
+            "description": "Structured evidence references that contradict the claim.",
+            "items": {
+              "$ref": "#/$defs/evidence"
+            }
+          },
+          "assumptions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["high", "medium", "low"]
+          },
+          "validated_by": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "stress_test_result": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "method": {
+                "type": "string",
+                "enum": [
+                  "why_chain",
+                  "counter_evidence_search",
+                  "executable_validation",
+                  "skipped"
+                ]
+              },
+              "depth": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "outcome": {
+                "type": "string",
+                "enum": ["confirmed", "weakened", "refuted", "inconclusive", "not_tested"]
+              },
+              "notes": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "description": "Critical and high impact claims require at least one direct evidence entry (implementation-spec 2.6 gate).",
+            "if": {
+              "properties": {
+                "impact": {
+                  "enum": ["critical", "high"]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "evidence": {
+                  "contains": {
+                    "properties": {
+                      "evidence_type": {
+                        "const": "direct"
+                      }
+                    },
+                    "required": ["evidence_type"]
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
