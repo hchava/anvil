@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/issue_ledger.schema.json",
+  "title": "Issue Ledger",
+  "description": "Tracked issues with resolution semantics and blocking scope. Implements the implementation-spec 2.7 contract plus the Milestone 0 / roadmap closure-gate hardening.",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "evidence_reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "ref"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "command_output",
+            "file_excerpt",
+            "agent_claim",
+            "human_note",
+            "external_doc"
+          ]
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": [
+    "run_id",
+    "issues"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+    },
+    "issues": {
+      "type": "array",
+      "description": "May be empty when no issues were found.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "issue_id",
+          "title",
+          "severity",
+          "raised_by",
+          "layer",
+          "resolution",
+          "safe_to_continue_without_resolution",
+          "blocks_work_orders",
+          "blocks_layers"
+        ],
+        "properties": {
+          "issue_id": {
+            "type": "string",
+            "pattern": "^ISSUE-[0-9]{3,}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"]
+          },
+          "raised_by": {
+            "type": "string",
+            "minLength": 1
+          },
+          "layer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "task_contract_ref": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "related_claims": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^CLAIM-[0-9]{3,}$"
+            }
+          },
+          "related_sources": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^SRC-[0-9]{3,}$"
+            }
+          },
+          "claude_position": {
+            "type": "string"
+          },
+          "codex_position": {
+            "type": "string"
+          },
+          "evidence_required_to_close": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "resolution": {
+            "type": "string",
+            "enum": [
+              "open",
+              "resolved_by_evidence",
+              "resolved_by_human",
+              "deferred",
+              "rejected_as_invalid"
+            ]
+          },
+          "closure_evidence": {
+            "type": "array",
+            "description": "Structured evidence references justifying closure.",
+            "items": {
+              "$ref": "#/$defs/evidence_reference"
+            }
+          },
+          "blocks_work_orders": {
+            "type": "array",
+            "description": "Work orders blocked by this issue. Required, even if empty.",
+            "items": {
+              "type": "string",
+              "pattern": "^EXEC-(INT-)?[0-9]{3,}$"
+            }
+          },
+          "blocks_layers": {
+            "type": "array",
+            "description": "Logical layers blocked by this issue. Required, even if empty.",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "safe_to_continue_without_resolution": {
+            "type": "boolean"
+          },
+          "rounds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "human_decision_ref": {
+            "type": "string",
+            "pattern": "^DEC-[0-9]{3,}$"
+          }
+        },
+        "allOf": [
+          {
+            "description": "Evidence-resolved issues require non-empty closure_evidence (roadmap issue closure gate).",
+            "if": {
+              "properties": {
+                "resolution": {
+                  "const": "resolved_by_evidence"
+                }
+              }
+            },
+            "then": {
+              "required": ["closure_evidence"],
+              "properties": {
+                "closure_evidence": {
+                  "minItems": 1
+                }
+              }
+            }
+          },
+          {
+            "description": "Human-resolved issues require a human decision reference (roadmap issue closure gate).",
+            "if": {
+              "properties": {
+                "resolution": {
+                  "const": "resolved_by_human"
+                }
+              }
+            },
+            "then": {
+              "required": ["human_decision_ref"]
+            }
+          },
+          {
+            "description": "Deferred issues require a human decision reference AND must be explicitly safe to continue without resolution (roadmap issue closure gate, line 360).",
+            "if": {
+              "properties": {
+                "resolution": {
+                  "const": "deferred"
+                }
+              }
+            },
+            "then": {
+              "required": ["human_decision_ref"],
+              "properties": {
+                "safe_to_continue_without_resolution": {
+                  "const": true
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

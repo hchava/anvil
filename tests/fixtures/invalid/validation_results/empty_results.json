@@ -1,0 +1,9 @@
+{
+  "run_id": "RUN-20260527-001",
+  "schema_version": "0.1.0",
+  "generated_at": "2026-05-27T13:04:00Z",
+  "work_order_ref": "EXEC-001",
+  "overall_passed": true,
+  "new_failures_vs_baseline": 0,
+  "results": []
+}

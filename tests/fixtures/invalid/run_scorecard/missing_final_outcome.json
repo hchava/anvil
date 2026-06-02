@@ -1,0 +1,38 @@
+{
+  "run_id": "RUN-20260527-001",
+  "mode": "standard",
+  "duration_seconds": 342,
+  "token_cost_estimate": 0.47,
+  "agents_launched": 8,
+  "risk_score_initial": 4,
+  "risk_score_final": 6,
+  "mode_escalated": true,
+  "issues_by_severity": {
+    "critical": 0,
+    "high": 1,
+    "medium": 2,
+    "low": 1
+  },
+  "issues_closed_by_evidence": 3,
+  "issues_deferred_by_human": 0,
+  "layer_yield": {
+    "layer1_5_codex_blindspot": {
+      "issues_opened": 1,
+      "blocking_issues": 1
+    }
+  },
+  "deterministic_checks": {
+    "tests_passed": true,
+    "linters_passed": true,
+    "type_checks_passed": true,
+    "secret_scan_passed": true,
+    "new_test_failures_vs_baseline": 0
+  },
+  "work_orders_total": 2,
+  "work_orders_passed": 2,
+  "work_orders_reworked": 0,
+  "task_contract_amendments": 0,
+  "human_escalations": 0,
+  "schema_validation_failures": 1,
+  "agent_retries": 1
+}

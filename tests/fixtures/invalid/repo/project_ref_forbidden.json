@@ -1,0 +1,11 @@
+{
+  "repo_id": "repo-toy-python-service",
+  "schema_version": "0.1.0",
+  "name": "toy-python-service",
+  "path": "/home/example/repos/toy-python-service",
+  "url": "https://example.com/anvil-demo/toy-python-service.git",
+  "default_branch": "main",
+  "vcs": "git",
+  "created_at": "2026-05-01T00:05:00Z",
+  "project_ref": "proj-x"
+}

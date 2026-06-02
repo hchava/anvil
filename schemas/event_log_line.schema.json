@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/event_log_line.schema.json",
+  "title": "Event Log Line",
+  "description": "A single append-only event record (one JSONL line). Implements the implementation-spec 2.11 contract with a monotonic sequence number. The record root is closed (additionalProperties:false); only the optional `details` payload is deliberately freeform, since each event_type carries different structured data.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "seq",
+    "timestamp",
+    "event_type",
+    "actor"
+  ],
+  "properties": {
+    "seq": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Monotonically increasing sequence number."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "state_transition",
+        "agent_launched",
+        "agent_completed",
+        "agent_failed",
+        "agent_retried",
+        "gate_passed",
+        "gate_failed",
+        "schema_validation_passed",
+        "schema_validation_failed",
+        "risk_rescored",
+        "mode_escalated",
+        "artifact_written",
+        "file_locked",
+        "file_unlocked",
+        "command_executed",
+        "human_escalated",
+        "human_decided",
+        "issue_opened",
+        "issue_closed",
+        "issue_deferred",
+        "contract_amended",
+        "run_aborted",
+        "run_finalized"
+      ]
+    },
+    "actor": {
+      "type": "string",
+      "minLength": 1,
+      "description": "controller | claude-agent-{id} | codex | human"
+    },
+    "state_before": {
+      "type": "string"
+    },
+    "state_after": {
+      "type": "string"
+    },
+    "details": {
+      "type": "object",
+      "description": "Deliberately freeform per-event payload; shape varies by event_type.",
+      "additionalProperties": true
+    },
+    "artifact_ref": {
+      "type": "string"
+    },
+    "error": {
+      "type": "string"
+    }
+  }
+}

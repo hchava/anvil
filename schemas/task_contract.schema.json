@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/task_contract.schema.json",
+  "title": "Task Contract",
+  "description": "Goals, non-goals, constraints, and acceptance criteria. Implements the implementation-spec 2.2 contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "amendment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["amendment_id", "reason", "proposed_change", "evidence", "approved_by"],
+      "properties": {
+        "amendment_id": {
+          "type": "string",
+          "pattern": "^AMEND-[0-9]{3,}$"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "proposed_change": {
+          "type": "string",
+          "minLength": 1
+        },
+        "field_changed": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "risk_change": {
+          "type": "string"
+        },
+        "approved_by": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "human_required": {
+          "type": "boolean"
+        },
+        "human_approved": {
+          "type": "boolean"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "required": [
+    "run_id",
+    "task_summary",
+    "goals",
+    "acceptance_criteria"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+    },
+    "task_summary": {
+      "type": "string",
+      "minLength": 10
+    },
+    "goals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "non_goals": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "forbidden_changes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "expected_behavior": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "risk_assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "human_approval_required_for": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["proposed", "accepted", "amended"]
+    },
+    "amendments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/amendment"
+      }
+    }
+  }
+}

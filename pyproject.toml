@@ -25,6 +25,11 @@ dependencies = [
     "click>=8.1.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
 [project.scripts]
 anvil = "anvil.cli.main:cli"
 
@@ -40,6 +45,10 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+# importlib mode keeps the schema-validation suite importable without colliding
+# with the src/ package layout (the default prepend mode clashes via the empty
+# tests/__init__.py).
+addopts = "--import-mode=importlib"
 
 [tool.ruff]
 target-version = "py311"

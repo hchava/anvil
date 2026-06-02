@@ -1,0 +1,14 @@
+{
+  "command_id": "cmd-0007",
+  "command_array": [
+    "pytest",
+    "tests/ingestion/test_config.py"
+  ],
+  "exit_code": 0,
+  "started_at": "2026-05-27T13:04:00Z",
+  "finished_at": "2026-05-27T13:04:02Z",
+  "duration_ms": 1200,
+  "timed_out": false,
+  "stdout_excerpt": "12 passed in 1.2s",
+  "stderr_excerpt": ""
+}

@@ -16,12 +16,10 @@
     "codex_validator": "codex-v1"
   },
   "prompt_versions": {
-    "orchestrator": "orchestrator-v0.1.0",
-    "security_reviewer": "security-reviewer-v0.1.0"
+    "orchestrator": "orchestrator-v0.1.0"
   },
   "prompt_hashes": {
-    "orchestrator": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
-    "security_reviewer": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    "orchestrator": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   },
   "guardrails": {
     "version": "2026-05-20",

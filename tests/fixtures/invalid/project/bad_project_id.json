@@ -1,0 +1,10 @@
+{
+  "project_id": "ingestion-platform",
+  "schema_version": "0.1.0",
+  "name": "Ingestion Platform",
+  "description": "Synthetic example project.",
+  "created_at": "2026-05-01T00:00:00Z",
+  "repos": [
+    "repo-toy-python-service"
+  ]
+}

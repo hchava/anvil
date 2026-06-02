@@ -1,0 +1,23 @@
+{
+  "run_id": "RUN-20260527-001",
+  "consolidated_issues": [
+    {
+      "consolidated_id": "CONSOL-001",
+      "raw_issue_ids": [
+        "RAW-SEC-001"
+      ],
+      "disposition": "dropped",
+      "title": "Missing input validation.",
+      "severity": "high"
+    },
+    {
+      "consolidated_id": null,
+      "raw_issue_ids": [
+        "RAW-PERF-002"
+      ],
+      "disposition": "merged_into",
+      "merged_into": "CONSOL-001",
+      "merge_reason": "Same root cause."
+    }
+  ]
+}

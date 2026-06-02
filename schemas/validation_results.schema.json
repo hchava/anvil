@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/validation_results.schema.json",
+  "title": "Validation Results",
+  "description": "Results of running a work order's structured validation commands, diffed against baseline.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "schema_version",
+    "generated_at",
+    "work_order_ref",
+    "overall_passed",
+    "results"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "work_order_ref": {
+      "type": "string",
+      "pattern": "^EXEC-(INT-)?[0-9]{3,}$"
+    },
+    "overall_passed": {
+      "type": "boolean"
+    },
+    "new_failures_vs_baseline": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["command_array", "exit_code", "passed"],
+        "properties": {
+          "command_array": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "exit_code": {
+            "type": "integer"
+          },
+          "passed": {
+            "type": "boolean"
+          },
+          "stdout_excerpt": {
+            "type": "string"
+          },
+          "stderr_excerpt": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

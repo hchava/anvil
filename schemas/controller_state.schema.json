@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/controller_state.schema.json",
+  "title": "Controller State",
+  "description": "Persisted controller state for resumability. Implements the implementation-spec 1.3 contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "current_state",
+    "mode",
+    "pending_human_decisions"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+    },
+    "current_state": {
+      "type": "string",
+      "enum": [
+        "INIT",
+        "BASELINE_CAPTURED",
+        "TASK_CONTRACT_PROPOSED",
+        "TASK_CONTRACT_ACCEPTED",
+        "SOURCES_DISCOVERED",
+        "SOURCE_GAPS_RESOLVED",
+        "CLAIMS_RESEARCHED",
+        "BLINDSPOT_SCAN_COMPLETE",
+        "CLAIMS_STRESS_TESTED",
+        "CROSS_VALIDATION_PENDING",
+        "CROSS_VALIDATION_COMPLETE",
+        "PLAN_CREATED",
+        "PLAN_REVIEWED",
+        "WORK_ORDERS_AGREED",
+        "EXECUTION_COMPLETE",
+        "INTEGRATION_VALIDATED",
+        "READY_FOR_COMMIT_REVIEW",
+        "COMMIT_REVIEWED",
+        "FINALIZED",
+        "ABORTED",
+        "HUMAN_ESCALATED"
+      ]
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["fast", "standard", "critical", "pending_risk_assessment"]
+    },
+    "risk_scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "initial": {
+          "type": ["integer", "null"]
+        },
+        "post_discovery": {
+          "type": ["integer", "null"]
+        },
+        "post_plan": {
+          "type": ["integer", "null"]
+        },
+        "post_execution": {
+          "type": ["integer", "null"]
+        }
+      }
+    },
+    "state_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["state", "entered_at"],
+        "properties": {
+          "state": {
+            "type": "string",
+            "minLength": 1
+          },
+          "entered_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "exited_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "pending_human_decisions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^ISSUE-[0-9]{3,}$"
+      }
+    },
+    "retry_counts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "task_contract_amendments": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^AMEND-[0-9]{3,}$"
+      }
+    },
+    "active_agents": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "locked_files": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

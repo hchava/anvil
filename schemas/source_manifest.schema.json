@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/source_manifest.schema.json",
+  "title": "Source Manifest",
+  "description": "Discovered sources with required freshness metadata. Implements the implementation-spec 2.4 contract plus the Milestone 0 freshness hardening.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "sources"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_id",
+          "path",
+          "source_type",
+          "discovered_by",
+          "reason_for_inclusion",
+          "freshness"
+        ],
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "pattern": "^SRC-[0-9]{3,}$"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "code",
+              "test",
+              "config",
+              "migration",
+              "api_contract",
+              "ci_cd",
+              "doc",
+              "post",
+              "runbook",
+              "lockfile",
+              "other"
+            ]
+          },
+          "discovered_by": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "reason_for_inclusion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "freshness": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["checked_at"],
+            "properties": {
+              "commit_sha": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{7,40}$"
+              },
+              "last_modified": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "checked_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "description": "Code, test, config, migration, and lockfile sources must reference a commit SHA.",
+            "if": {
+              "properties": {
+                "source_type": {
+                  "enum": ["code", "test", "config", "migration", "lockfile"]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "freshness": {
+                  "required": ["commit_sha"]
+                }
+              }
+            }
+          },
+          {
+            "description": "Document, runbook, and post sources must record a last-modified timestamp.",
+            "if": {
+              "properties": {
+                "source_type": {
+                  "enum": ["doc", "runbook", "post"]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "freshness": {
+                  "required": ["last_modified"]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

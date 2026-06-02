@@ -1,0 +1,305 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/execution_work_orders.schema.json",
+  "title": "Execution Work Orders",
+  "description": "Co-negotiated, gate-safe execution work orders. Implements the implementation-spec 2.9 contract with structured argv validation commands and structured rollback primitives.",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "rollback_action": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Structured rollback primitive. Never a raw shell string.",
+      "required": ["op"],
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": [
+            "revert_commit",
+            "restore_file",
+            "delete_file",
+            "drop_worktree",
+            "restore_backup",
+            "noop"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "description": "File operations must name the target path.",
+          "if": {
+            "properties": {
+              "op": {
+                "enum": ["restore_file", "delete_file"]
+              }
+            }
+          },
+          "then": {
+            "required": ["target"]
+          }
+        },
+        {
+          "description": "Commit and backup operations must name the reference to restore.",
+          "if": {
+            "properties": {
+              "op": {
+                "enum": ["revert_commit", "restore_backup"]
+              }
+            }
+          },
+          "then": {
+            "required": ["ref"]
+          }
+        }
+      ]
+    },
+    "validation_command": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Structured argv command, never a shell string (prevents injection).",
+      "required": ["command_array", "expected_exit_code"],
+      "properties": {
+        "command_array": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "expected_exit_code": {
+          "type": "integer"
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  },
+  "required": [
+    "run_id",
+    "work_orders",
+    "dependency_matrix"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+    },
+    "work_orders": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "work_order_id",
+          "title",
+          "negotiation_status",
+          "criticality",
+          "fail_policy",
+          "assigned_scope",
+          "local_acceptance_criteria",
+          "validation_commands",
+          "rollback_plan"
+        ],
+        "properties": {
+          "work_order_id": {
+            "type": "string",
+            "pattern": "^EXEC-(INT-)?[0-9]{3,}$",
+            "description": "E.g. EXEC-001 or EXEC-INT-001."
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parent_plan_id": {
+            "type": "string"
+          },
+          "task_contract_ref": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "negotiation_status": {
+            "type": "string",
+            "enum": ["proposed", "negotiating", "agreed", "rejected"]
+          },
+          "agreed_by": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "criticality": {
+            "type": "string",
+            "enum": ["required", "optional"]
+          },
+          "fail_policy": {
+            "type": "string",
+            "enum": ["fail_closed", "fail_open"]
+          },
+          "is_integration_wo": {
+            "type": "boolean"
+          },
+          "assigned_scope": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["allowed_files"],
+            "properties": {
+              "allowed_files": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "forbidden_files": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "preconditions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "implementation_guidance": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "required_steps": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "suggested_steps": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "forbidden_steps": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "local_acceptance_criteria": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "global_acceptance_criteria": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "validation_commands": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/validation_command"
+            }
+          },
+          "rollback_plan": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/rollback_action"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready_for_execution",
+              "executing",
+              "validation_passed",
+              "validation_failed",
+              "rolled_back"
+            ]
+          }
+        }
+      }
+    },
+    "dependency_matrix": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["work_order_id", "depends_on", "can_run_parallel"],
+        "properties": {
+          "work_order_id": {
+            "type": "string",
+            "pattern": "^EXEC-(INT-)?[0-9]{3,}$"
+          },
+          "depends_on": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^EXEC-(INT-)?[0-9]{3,}$"
+            }
+          },
+          "can_run_parallel": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "file_ownership": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file_path", "work_order_id"],
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "work_order_id": {
+            "type": "string",
+            "pattern": "^EXEC-(INT-)?[0-9]{3,}$"
+          },
+          "lock_status": {
+            "type": "string",
+            "enum": ["unlocked", "locked", "released"]
+          }
+        }
+      }
+    }
+  }
+}

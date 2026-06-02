@@ -1,0 +1,21 @@
+{
+  "run_id": "RUN-20260527-001",
+  "coverage_areas": [
+    {
+      "area": "code_entry_points",
+      "required_level": "required",
+      "evidence_found": true,
+      "source_ids": [
+        "SRC-001"
+      ],
+      "gap_status": "covered"
+    },
+    {
+      "area": "tests",
+      "required_level": "required",
+      "evidence_found": false,
+      "gap_status": "gap"
+    }
+  ],
+  "overall_sufficient": false
+}

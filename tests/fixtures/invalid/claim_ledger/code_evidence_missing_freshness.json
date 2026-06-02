@@ -1,0 +1,26 @@
+{
+  "run_id": "RUN-20260527-001",
+  "claims": [
+    {
+      "claim_id": "CLAIM-002",
+      "claim": "parse_keys validates required keys.",
+      "claim_type": "code_behavior",
+      "impact": "high",
+      "task_contract_ref": [
+        "goals[0]"
+      ],
+      "evidence": [
+        {
+          "source_id": "SRC-001",
+          "source_type": "code",
+          "evidence_type": "direct",
+          "supports_claim_because": "Implements the validation branch."
+        }
+      ],
+      "confidence": "high",
+      "validated_by": [
+        "claude-research-agent-2"
+      ]
+    }
+  ]
+}

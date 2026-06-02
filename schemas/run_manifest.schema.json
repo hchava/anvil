@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/run_manifest.schema.json",
+  "title": "Run Manifest",
+  "description": "Immutable per-run metadata. Implements the implementation-spec 2.1 contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "created_at",
+    "task_description",
+    "project_id",
+    "repo_id",
+    "initiated_by",
+    "repo",
+    "models",
+    "prompt_versions",
+    "prompt_hashes",
+    "guardrails",
+    "mode",
+    "artifact_root"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "task_description": {
+      "type": "string",
+      "minLength": 10
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^proj-[A-Za-z0-9._-]+$",
+      "description": "References a project (matches project.schema.json project_id)."
+    },
+    "repo_id": {
+      "type": "string",
+      "pattern": "^repo-[A-Za-z0-9._-]+$",
+      "description": "References a shared repo (matches repo.schema.json repo_id)."
+    },
+    "task_scope": {
+      "type": "string",
+      "minLength": 1
+    },
+    "initiated_by": {
+      "type": "string",
+      "minLength": 1
+    },
+    "repo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "branch", "base_commit"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "branch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "base_commit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{7,40}$"
+        }
+      }
+    },
+    "models": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claude_orchestrator", "codex_validator"],
+      "properties": {
+        "claude_orchestrator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "codex_validator": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "prompt_versions": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "prompt_hashes": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^sha256:[a-f0-9]{64}$"
+      }
+    },
+    "guardrails": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "source_path"],
+      "properties": {
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_path": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["fast", "standard", "critical", "pending_risk_assessment"]
+    },
+    "artifact_root": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

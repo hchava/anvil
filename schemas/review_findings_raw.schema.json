@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/review_findings_raw.schema.json",
+  "title": "Review Findings (Raw)",
+  "description": "Merged raw findings from the review panel, before deduplication. Implements the implementation-spec Part 4 raw-findings contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "raw_issues"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+    },
+    "raw_issues": {
+      "type": "array",
+      "description": "May be empty when no reviewer raised anything.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["raw_issue_id", "reviewer", "severity", "title"],
+        "properties": {
+          "raw_issue_id": {
+            "type": "string",
+            "pattern": "^RAW-[A-Z]+-[0-9]{3,}$"
+          },
+          "reviewer": {
+            "type": "string",
+            "enum": [
+              "correctness",
+              "performance",
+              "security",
+              "quality",
+              "integration"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low", "info"]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/human_decision.schema.json",
+  "title": "Human Decision",
+  "description": "A decision made by a human during escalation. Implements the implementation-spec section 3 human_decision contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "decision_id",
+    "run_id",
+    "issue_id",
+    "decision",
+    "rationale",
+    "approved_by",
+    "timestamp"
+  ],
+  "properties": {
+    "decision_id": {
+      "type": "string",
+      "pattern": "^DEC-[0-9]{3,}$"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+    },
+    "issue_id": {
+      "type": "string",
+      "pattern": "^ISSUE-[0-9]{3,}$"
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["approve", "reject", "defer", "modify_scope"]
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1
+    },
+    "approved_by": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_after_run": {
+      "type": "boolean"
+    },
+    "content_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    }
+  }
+}

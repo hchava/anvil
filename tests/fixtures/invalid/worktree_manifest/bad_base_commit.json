@@ -1,0 +1,14 @@
+{
+  "run_id": "RUN-20260527-001",
+  "schema_version": "0.1.0",
+  "created_at": "2026-05-27T13:03:00Z",
+  "worktree_id": "wt-001",
+  "base_repo": "toy-python-service",
+  "base_commit": "not-a-sha",
+  "branch": "anvil/RUN-20260527-001",
+  "path": "/var/anvil/worktrees/RUN-20260527-001",
+  "file_scope": [
+    "src/ingestion/config.py"
+  ],
+  "status": "active"
+}

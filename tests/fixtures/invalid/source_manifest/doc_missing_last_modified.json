@@ -1,0 +1,31 @@
+{
+  "run_id": "RUN-20260527-001",
+  "sources": [
+    {
+      "source_id": "SRC-001",
+      "path": "src/ingestion/config.py",
+      "source_type": "code",
+      "discovered_by": [
+        "ripgrep",
+        "ast_reference_scan"
+      ],
+      "reason_for_inclusion": "Defines config loading.",
+      "freshness": {
+        "commit_sha": "abc1234",
+        "checked_at": "2026-05-27T13:20:00Z"
+      }
+    },
+    {
+      "source_id": "SRC-002",
+      "path": "docs/ingestion-runbook.md",
+      "source_type": "doc",
+      "discovered_by": [
+        "claude-agent-0B"
+      ],
+      "reason_for_inclusion": "Describes ingestion ops.",
+      "freshness": {
+        "checked_at": "2026-05-27T13:20:00Z"
+      }
+    }
+  ]
+}
