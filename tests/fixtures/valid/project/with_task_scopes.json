@@ -1,0 +1,32 @@
+{
+  "project_id": "proj-ingestion-platform",
+  "schema_version": "0.1.0",
+  "name": "Ingestion Platform",
+  "created_at": "2026-05-01T00:00:00Z",
+  "repos": [
+    "repo-toy-python-service"
+  ],
+  "task_scopes": {
+    "ingestion-pipeline": {
+      "root_paths": [
+        "src/ingestion/",
+        "tests/ingestion/"
+      ],
+      "discovery_focus_paths": [
+        "src/ingestion/"
+      ],
+      "default_forbidden_changes": [
+        "src/export/"
+      ],
+      "baseline_commands": [
+        {
+          "command_array": [
+            "pytest",
+            "tests/ingestion/"
+          ],
+          "label": "ingestion_tests"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "keyword": "required",
+  "path": [
+    "task_scopes",
+    "ingestion-pipeline"
+  ]
+}
