@@ -571,7 +571,7 @@ def test_checkout_contamination_rejected(tmp_path, registry):
 
 
 def test_checkout_contamination_logged(tmp_path, registry):
-    """Checkout contamination must be logged in the event log."""
+    """Checkout contamination must be logged without exposing raw filenames."""
     repo, worktree, run_dir = _setup_run(tmp_path, registry)
 
     def contaminating_agent(wt: Path) -> None:
@@ -586,6 +586,34 @@ def test_checkout_contamination_logged(tmp_path, registry):
     events = [json.loads(line) for line in log_path.read_text().splitlines() if line.strip()]
     event_types = [e["event_type"] for e in events]
     assert "checkout_contaminated" in event_types
+
+    # The event details must NOT contain raw filenames — only count and categories.
+    contamination_events = [e for e in events if e["event_type"] == "checkout_contaminated"]
+    assert contamination_events
+    details = contamination_events[0].get("details", {})
+    log_text = json.dumps(details)
+    assert "app.py" not in log_text, "Raw filename must not appear in event log details"
+    assert "src/" not in log_text, "Raw path must not appear in event log details"
+    assert "dirty_file_count" in details
+    assert "dirty_categories" in details
+
+
+def test_checkout_probe_failure_fails_closed(tmp_path, registry):
+    """Fix 2 repro: if the checkout probe can't run, executor must fail closed."""
+    repo, worktree, run_dir = _setup_run(tmp_path, registry)
+    executor = _make_executor(
+        registry, worktree, run_dir, _make_work_order(), "repo-my-service"
+    )
+
+    # Simulate a broken git probe: make _snapshot_repo_status always return None.
+    original_snapshot = executor._snapshot_repo_status
+    executor._snapshot_repo_status = lambda _path: None  # type: ignore[method-assign]
+
+    result = executor.execute(_agent_writes_nothing)
+
+    assert result.status in ("checkout_contaminated", "rollback_error"), (
+        f"Expected checkout_contaminated on probe failure but got {result.status!r}"
+    )
 
 
 def test_clean_agent_passes_checkout_check(tmp_path, registry):

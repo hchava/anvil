@@ -164,22 +164,31 @@ class WorkOrderExecutor:
 
             # --- 2a. Checkout isolation check -----------------------------------
             # Verify the execution agent did not write to the registered normal
-            # checkout (outside the worktree).  Fail closed: restore the checkout
-            # if contaminated, then rollback the worktree for good measure.
+            # checkout (outside the worktree).  Fail closed on two conditions:
+            #   (a) the probe itself failed (checkout integrity cannot be verified)
+            #   (b) the checkout changed (contamination detected)
             repo_status_after = self._snapshot_repo_status(repo_path)
-            if repo_status_after != repo_status_before:
-                dirty_summary = repo_status_after.strip()[:500]
-                self._event_log.append(
-                    "checkout_contaminated",
-                    details={
+
+            probe_failed = repo_status_before is None or repo_status_after is None
+            contaminated = (not probe_failed) and (repo_status_after != repo_status_before)
+
+            if probe_failed or contaminated:
+                if probe_failed:
+                    details: dict[str, Any] = {
                         "work_order_id": self._work_order_id,
-                        "dirty_files": dirty_summary,
-                    },
-                )
+                        "reason": "checkout isolation probe failed — cannot verify integrity",
+                    }
+                    result.error = "checkout isolation probe failed — cannot verify registered checkout integrity"
+                else:
+                    # Log counts and categories only — never raw paths or filenames.
+                    details = {
+                        "work_order_id": self._work_order_id,
+                        "dirty_file_count": len(repo_status_after.splitlines()),  # type: ignore[union-attr]
+                        "dirty_categories": self._categorize_status_output(repo_status_after),  # type: ignore[arg-type]
+                    }
+                    result.error = "execution_agent wrote to registered checkout outside worktree"
+                self._event_log.append("checkout_contaminated", details=details)
                 result.status = "checkout_contaminated"
-                result.error = (
-                    "execution_agent wrote to registered checkout outside worktree"
-                )
                 if repo_path is not None:
                     self._restore_repo_checkout(repo_path)
                 scope_result = check_scope(
@@ -365,19 +374,46 @@ class WorkOrderExecutor:
         except Exception:
             return None
 
-    def _snapshot_repo_status(self, repo_path: Path | None) -> str:
+    def _snapshot_repo_status(self, repo_path: Path | None) -> str | None:
+        """Return `git status --porcelain` output, or None if the probe fails.
+
+        None signals that the checkout cannot be inspected; callers must
+        fail closed rather than treating the checkout as clean.
+        """
         if repo_path is None:
-            return ""
+            return None
         try:
-            return subprocess.run(
+            result = subprocess.run(
                 ["git", "status", "--porcelain"],
                 cwd=str(repo_path),
                 capture_output=True,
                 text=True,
                 check=False,
-            ).stdout
+            )
+            if result.returncode != 0:
+                return None
+            return result.stdout
         except Exception:
-            return ""
+            return None
+
+    @staticmethod
+    def _categorize_status_output(porcelain: str) -> dict[str, int]:
+        """Summarize porcelain status by category — no filenames emitted."""
+        counts: dict[str, int] = {}
+        for line in porcelain.splitlines():
+            if len(line) < 2:
+                continue
+            xy = line[:2]
+            if xy == "??":
+                cat = "untracked"
+            elif xy[0] in "AMDRC":
+                cat = "staged"
+            elif xy[1] in "MDTU":
+                cat = "unstaged"
+            else:
+                cat = "other"
+            counts[cat] = counts.get(cat, 0) + 1
+        return {k: v for k, v in counts.items() if v > 0}
 
     def _restore_repo_checkout(self, repo_path: Path) -> None:
         """Best-effort cleanup of the registered checkout after contamination."""
