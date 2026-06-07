@@ -2,17 +2,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://anvil.dev/schemas/human_decision.schema.json",
   "title": "Human Decision",
-  "description": "A decision made by a human during escalation. Implements the implementation-spec section 3 human_decision contract.",
+  "description": "A decision made by a human during escalation. Milestone 2: supports multiple issue_ids, scope_delta, tamper-detectable content_hash, and controller_observed_at.",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "decision_id",
     "run_id",
-    "issue_id",
+    "issue_ids",
     "decision",
     "rationale",
     "approved_by",
-    "timestamp"
+    "created_at",
+    "content_hash"
   ],
   "properties": {
     "decision_id": {
@@ -21,11 +22,15 @@
     },
     "run_id": {
       "type": "string",
-      "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+      "minLength": 1
     },
-    "issue_id": {
-      "type": "string",
-      "pattern": "^ISSUE-[0-9]{3,}$"
+    "issue_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^ISSUE-[0-9]{3,}$"
+      },
+      "minItems": 1
     },
     "decision": {
       "type": "string",
@@ -35,16 +40,34 @@
       "type": "string",
       "minLength": 1
     },
+    "scope_delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "goals_added": {"type": "array", "items": {"type": "string"}},
+        "goals_removed": {"type": "array", "items": {"type": "string"}},
+        "non_goals_added": {"type": "array", "items": {"type": "string"}},
+        "forbidden_changes_relaxed": {"type": "array", "items": {"type": "string"}},
+        "constraints_added": {"type": "array", "items": {"type": "string"}}
+      }
+    },
     "approved_by": {
       "type": "string",
       "minLength": 1
     },
-    "timestamp": {
+    "expires_after_run": {
+      "type": "boolean"
+    },
+    "requires_contract_amendment": {
+      "type": "boolean"
+    },
+    "created_at": {
       "type": "string",
       "format": "date-time"
     },
-    "expires_after_run": {
-      "type": "boolean"
+    "controller_observed_at": {
+      "type": "string",
+      "format": "date-time"
     },
     "content_hash": {
       "type": "string",

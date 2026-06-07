@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/agent_output.schema.json",
+  "title": "Agent Output",
+  "description": "Output written by an agent into agents/{agent_id}/agent_output.json. The attempt_id must match the current agent_task.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["agent_id", "attempt_id", "task_type", "run_id", "output", "produced_at"],
+  "properties": {
+    "agent_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "attempt_id": {
+      "type": "string",
+      "pattern": "^ATT-[0-9]{3,}$"
+    },
+    "task_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "output": {
+      "type": "object"
+    },
+    "produced_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/contract_review.schema.json",
+  "title": "Contract Review",
+  "description": "Structured review output from a Codex-style reviewer of a task contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["reviewer_id", "attempt_id", "run_id", "decision", "rationale", "reviewed_at"],
+  "properties": {
+    "reviewer_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "attempt_id": {
+      "type": "string",
+      "pattern": "^ATT-[0-9]{3,}$"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["co-sign", "request_changes", "reject"]
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requested_changes": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "risk_score_agreement": {
+      "type": "string",
+      "enum": ["agree", "disagree_higher", "disagree_lower"]
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
