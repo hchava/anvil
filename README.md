@@ -23,8 +23,8 @@ Anvil addresses this by treating LLMs as reasoning workers inside a deterministi
 - ✅ Milestone 0.5: Local runtime registry and controller state model
 - ✅ Milestone 1: Deterministic controller dry run
 - ✅ Milestone 2: Claude/Codex contract loop
-- 🚧 Milestone 3: Single work-order execution
-- ⏳ Milestone 4: Standard Mode MVP
+- ✅ Milestone 3: Single work-order execution
+- 🚧 Milestone 4: Standard Mode MVP
 - ⏳ Milestone 5: Parallel work orders and merge protocol
 - ⏳ Milestone 6: Critical Mode expansion
 
@@ -214,8 +214,8 @@ Anvil is in active development. See the [roadmap](docs/roadmap.md) for the full 
 | 0.5 | ✅ Complete | Local runtime registry and controller state model |
 | 1 | ✅ Complete | Deterministic controller dry run |
 | 2 | ✅ Complete | Claude/Codex contract loop |
-| 3 | 🚧 Next | Single work-order execution |
-| 4 | ⏳ Planned | Standard Mode MVP |
+| 3 | ✅ Complete | Single work-order execution |
+| 4 | 🚧 Next | Standard Mode MVP |
 | 5 | ⏳ Planned | Parallel work orders and merge protocol |
 | 6 | ⏳ Planned | Critical Mode expansion |
 | 7 | ⏳ Planned | Team mode — artifact export and PR integration |
