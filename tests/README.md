@@ -18,6 +18,22 @@ Milestone 0.5 adds the runtime-registry suites:
 - `test_drift.py` — base-commit drift detection.
 - `test_cli.py` — the `anvil` CLI end to end via Click's `CliRunner`.
 
+Milestone 1 adds the deterministic-controller suites (no LLM, no agents, no code
+writes — the controller produces the deterministic artifacts and validates
+fixture-supplied LLM-owned artifacts from `tests/m1_fixtures.py`):
+
+- `test_controller_dryrun.py` — full per-mode state path to FINALIZED; artifact
+  production; fast vs standard vs multi-WO sequencing.
+- `test_controller_gates.py` — issue-closure and guardrail gates (unit +
+  fail-closed end to end).
+- `test_controller_risk.py` — factor registry, staged scoring, Fast-Mode floor
+  rules, upward-only mode escalation.
+- `test_controller_events.py` — monotonic event sequence numbers + resume.
+- `test_controller_resume.py` — resume from `controller_state.json`.
+- `test_controller_xref.py` — the seven cross-reference validators.
+- `test_controller_discovery_baseline.py` — scope-aware discovery, baseline
+  capture, and base-commit drift.
+
 These run against a temporary `ANVIL_HOME` and temporary local git repos
 (`tests/conftest.py`), so they never touch your real `~/.anvil` and never use
 the network.

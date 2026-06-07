@@ -8,6 +8,7 @@ created under pytest's tmp_path. Nothing touches the developer's real
 from __future__ import annotations
 
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -78,3 +79,51 @@ def commit_change(repo_path: Path, filename: str, content: str, message: str) ->
     _git(["add", "-A"], cwd=repo_path)
     _git(["commit", "-q", "-m", message], cwd=repo_path)
     return _git(["rev-parse", "HEAD"], cwd=repo_path)
+
+
+@dataclass
+class ControllerEnv:
+    """A registered project/repo/scope with a created, activated run ready for a
+    Milestone 1 dry run. ``run_dir`` is where fixture artifacts are dropped."""
+
+    registry: Registry
+    run_id: str
+    project_id: str
+    repo_id: str
+    scope_id: str
+    repo_path: Path
+    run_dir: Path
+
+
+@pytest.fixture
+def controller_env(registry: Registry, git_repo_factory, tmp_path: Path) -> ControllerEnv:
+    """Standard Milestone 1 setup: project + repo + scope + activated run."""
+    repo_path = git_repo_factory("service")
+    # Add a focus path with a couple of files so deterministic discovery finds >=1.
+    (repo_path / "src" / "config").mkdir(parents=True, exist_ok=True)
+    (repo_path / "src" / "config" / "loader.py").write_text("def load_config():\n    return {}\n", encoding="utf-8")
+    (repo_path / "tests").mkdir(exist_ok=True)
+    (repo_path / "tests" / "test_loader.py").write_text("def test_ok():\n    assert True\n", encoding="utf-8")
+    _git(["add", "-A"], cwd=repo_path)
+    _git(["commit", "-q", "-m", "add config + tests"], cwd=repo_path)
+
+    registry.register_repo("repo-service", repo_path)
+    registry.create_project("proj-demo", ["repo-service"])
+    registry.create_scope(
+        "proj-demo",
+        "config-scope",
+        ["src/config/", "tests/"],
+        discovery_focus_paths=["src/config/", "tests/"],
+    )
+    run_id = "RUN-20260601-001"
+    registry.create_run(run_id, "proj-demo", "repo-service", "tester", task_scope_id="config-scope")
+    registry.activate_run(run_id)
+    return ControllerEnv(
+        registry=registry,
+        run_id=run_id,
+        project_id="proj-demo",
+        repo_id="repo-service",
+        scope_id="config-scope",
+        repo_path=repo_path,
+        run_dir=registry.paths.run_dir(run_id),
+    )
