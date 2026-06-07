@@ -96,3 +96,51 @@ def delete_branch(repo_path: Path, branch: str) -> None:
         _run(["branch", "-D", branch], cwd=repo_path)
     except GitError:
         pass
+
+
+def dirty_tracked_files(path: Path) -> set[str]:
+    """Tracked files that differ from HEAD in the working tree (excludes
+    untracked files, so build/test caches do not count as a mutation).
+
+    Uses ``-z`` so the two-char status code + space prefix is parsed exactly and
+    paths with spaces are handled. Rename entries (``R``) carry two NUL-separated
+    paths; both are recorded.
+    """
+    # Capture RAW stdout (not via _run, which strips and would eat the porcelain
+    # status code's leading space).
+    result = subprocess.run(
+        ["git", "status", "--porcelain", "--untracked-files=no", "-z"],
+        cwd=str(path),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise GitError(f"git status failed in {path}: {result.stderr.strip()}")
+    files: set[str] = set()
+    tokens = [t for t in result.stdout.split("\0") if t]
+    i = 0
+    while i < len(tokens):
+        entry = tokens[i]
+        status = entry[:2]
+        rest = entry[3:] if len(entry) > 3 else ""
+        if rest:
+            files.add(rest)
+        # Rename/copy: the source path is the NEXT NUL-separated token.
+        if status and status[0] in ("R", "C"):
+            i += 1
+            if i < len(tokens):
+                files.add(tokens[i])
+        i += 1
+    return files
+
+
+def restore_tracked(path: Path, files: set[str]) -> None:
+    """Revert the given tracked files to HEAD (undo a stray mutation)."""
+    targets = [f for f in files if f]
+    if not targets:
+        return
+    try:
+        _run(["checkout", "--", *targets], cwd=path)
+    except GitError:  # pragma: no cover - best effort
+        pass
