@@ -1,0 +1,14 @@
+{
+  "agent_id": "claude-contract-gen",
+  "attempt_id": "ATT-001",
+  "task_type": "task_contract_generation",
+  "run_id": "RUN-20260606-001",
+  "output": {
+    "run_id": "RUN-20260606-001",
+    "task_summary": "Add input validation to the config parser module.",
+    "goals": ["Validate all config fields on load"],
+    "acceptance_criteria": ["All validation tests pass"],
+    "status": "proposed"
+  },
+  "produced_at": "2026-06-06T12:01:00Z"
+}

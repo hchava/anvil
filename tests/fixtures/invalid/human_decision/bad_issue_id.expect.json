@@ -1,6 +1,7 @@
 {
   "keyword": "pattern",
   "path": [
-    "issue_id"
+    "issue_ids",
+    0
   ]
 }
