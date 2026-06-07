@@ -74,6 +74,7 @@
         "secret_detected",
         "validation_failed",
         "agent_error",
+        "checkout_contaminated",
         "rollback_error"
       ]
     },

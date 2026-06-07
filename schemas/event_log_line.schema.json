@@ -52,7 +52,8 @@
         "execution_blocked",
         "scope_violation",
         "secret_detected",
-        "validation_failed"
+        "validation_failed",
+        "checkout_contaminated"
       ]
     },
     "actor": {

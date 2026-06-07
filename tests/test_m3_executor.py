@@ -543,6 +543,63 @@ def test_file_ownership_in_manifest(tmp_path, registry):
 # Blocker repro tests (guard regressions on the four fixed issues)
 # ---------------------------------------------------------------------------
 
+def test_checkout_contamination_rejected(tmp_path, registry):
+    """Blocker 1 repro: agent writing to registered checkout must be detected and rejected."""
+    repo, worktree, run_dir = _setup_run(tmp_path, registry)
+
+    # Fake agent that ignores the worktree argument and writes to the main checkout.
+    def contaminating_agent(wt: Path) -> None:
+        (repo / "src" / "app.py").write_text("VALUE = 999\n", encoding="utf-8")
+
+    work_order = _make_work_order(allowed_files=["src/app.py"])
+    executor = _make_executor(registry, worktree, run_dir, work_order, "repo-my-service")
+
+    result = executor.execute(contaminating_agent)
+
+    assert result.status in ("checkout_contaminated", "rollback_error"), (
+        f"Expected checkout_contaminated but got {result.status!r}; "
+        "the executor must reject writes to the registered repo checkout"
+    )
+    # The checkout must be restored to its original state.
+    assert (repo / "src" / "app.py").read_text() == "VALUE = 1\n", (
+        "Registered checkout was not restored after contamination"
+    )
+    # Worktree (the correct target) must be untouched.
+    assert (worktree / "src" / "app.py").read_text() == "VALUE = 1\n"
+    # Artifacts must be written.
+    assert (run_dir / "worktree_manifest.json").exists()
+
+
+def test_checkout_contamination_logged(tmp_path, registry):
+    """Checkout contamination must be logged in the event log."""
+    repo, worktree, run_dir = _setup_run(tmp_path, registry)
+
+    def contaminating_agent(wt: Path) -> None:
+        (repo / "src" / "app.py").write_text("VALUE = 999\n", encoding="utf-8")
+
+    executor = _make_executor(
+        registry, worktree, run_dir, _make_work_order(), "repo-my-service"
+    )
+    executor.execute(contaminating_agent)
+
+    log_path = run_dir / "event_log.jsonl"
+    events = [json.loads(line) for line in log_path.read_text().splitlines() if line.strip()]
+    event_types = [e["event_type"] for e in events]
+    assert "checkout_contaminated" in event_types
+
+
+def test_clean_agent_passes_checkout_check(tmp_path, registry):
+    """A well-behaved agent that only writes to the worktree must pass the isolation check."""
+    repo, worktree, run_dir = _setup_run(tmp_path, registry)
+    executor = _make_executor(
+        registry, worktree, run_dir, _make_work_order(), "repo-my-service"
+    )
+    result = executor.execute(_agent_writes_allowed_file)
+    assert result.status == "success"
+    # The registered checkout must be unchanged.
+    assert (repo / "src" / "app.py").read_text() == "VALUE = 1\n"
+
+
 def test_partial_lease_acquisition_releases_acquired_leases(tmp_path, registry):
     """Blocker 2 repro: if the 2nd file conflicts, the 1st lease must be released."""
     repo, worktree, run_dir = _setup_run(tmp_path, registry, "RUN-20260607-010")

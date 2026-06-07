@@ -143,12 +143,45 @@ class WorkOrderExecutor:
                 "execution_started",
                 details={"work_order_id": self._work_order_id},
             )
+            repo_path = self._get_registered_repo_path()
+            repo_status_before = self._snapshot_repo_status(repo_path)
+
             try:
                 execution_agent(self._worktree)
             except Exception as exc:
                 # Agent raised — clean up whatever it wrote and record the error.
                 result.status = "agent_error"
                 result.error = str(exc)
+                scope_result = check_scope(
+                    self._worktree, self._allowed_files, self._forbidden_files
+                )
+                result.scope_result = scope_result
+                result.touched_files = scope_result.touched_files
+                result.rollback_result = self._do_rollback(scope_result)
+                if not result.rollback_result.success:
+                    result.status = "rollback_error"
+                return result
+
+            # --- 2a. Checkout isolation check -----------------------------------
+            # Verify the execution agent did not write to the registered normal
+            # checkout (outside the worktree).  Fail closed: restore the checkout
+            # if contaminated, then rollback the worktree for good measure.
+            repo_status_after = self._snapshot_repo_status(repo_path)
+            if repo_status_after != repo_status_before:
+                dirty_summary = repo_status_after.strip()[:500]
+                self._event_log.append(
+                    "checkout_contaminated",
+                    details={
+                        "work_order_id": self._work_order_id,
+                        "dirty_files": dirty_summary,
+                    },
+                )
+                result.status = "checkout_contaminated"
+                result.error = (
+                    "execution_agent wrote to registered checkout outside worktree"
+                )
+                if repo_path is not None:
+                    self._restore_repo_checkout(repo_path)
                 scope_result = check_scope(
                     self._worktree, self._allowed_files, self._forbidden_files
                 )
@@ -324,6 +357,49 @@ class WorkOrderExecutor:
         except Exception:
             pass
         return f"anvil/{self._repo_id}/{self._run_id}"
+
+    def _get_registered_repo_path(self) -> Path | None:
+        try:
+            row = self._registry.get_repo(self._repo_id)
+            return Path(row["path"])
+        except Exception:
+            return None
+
+    def _snapshot_repo_status(self, repo_path: Path | None) -> str:
+        if repo_path is None:
+            return ""
+        try:
+            return subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=str(repo_path),
+                capture_output=True,
+                text=True,
+                check=False,
+            ).stdout
+        except Exception:
+            return ""
+
+    def _restore_repo_checkout(self, repo_path: Path) -> None:
+        """Best-effort cleanup of the registered checkout after contamination."""
+        try:
+            subprocess.run(
+                ["git", "checkout", "--", "."],
+                cwd=str(repo_path),
+                capture_output=True,
+                check=False,
+            )
+        except Exception:
+            pass
+        try:
+            # Remove any new untracked files the agent wrote.
+            subprocess.run(
+                ["git", "clean", "-fd", "--"],
+                cwd=str(repo_path),
+                capture_output=True,
+                check=False,
+            )
+        except Exception:
+            pass
 
     def _do_rollback(self, scope_result: ScopeResult) -> RollbackResult:
         primitives = build_rollback_primitives(
