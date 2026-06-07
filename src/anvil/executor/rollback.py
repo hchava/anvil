@@ -32,6 +32,18 @@ class RollbackResult:
     errors: list[str] = field(default_factory=list)
 
 
+def _validate_target(target: str, worktree: Path) -> str | None:
+    """Return an error string if target is unsafe, else None."""
+    if not target:
+        return "target is empty"
+    if target.startswith("/"):
+        return f"target must be relative, not absolute: {target!r}"
+    resolved = (worktree / target).resolve()
+    if not str(resolved).startswith(str(worktree.resolve())):
+        return f"target escapes worktree boundary: {target!r}"
+    return None
+
+
 def rollback(worktree: Path, primitives: list[dict]) -> RollbackResult:
     """Execute rollback primitives in order. Continues on per-primitive errors."""
     restored: list[str] = []
@@ -45,6 +57,10 @@ def rollback(worktree: Path, primitives: list[dict]) -> RollbackResult:
         if op == "restore_file":
             if not target:
                 errors.append("restore_file primitive missing 'target'")
+                continue
+            containment_error = _validate_target(target, worktree)
+            if containment_error:
+                errors.append(f"restore_file rejected: {containment_error}")
                 continue
             try:
                 subprocess.run(
@@ -61,6 +77,10 @@ def rollback(worktree: Path, primitives: list[dict]) -> RollbackResult:
         elif op == "delete_file":
             if not target:
                 errors.append("delete_file primitive missing 'target'")
+                continue
+            containment_error = _validate_target(target, worktree)
+            if containment_error:
+                errors.append(f"delete_file rejected: {containment_error}")
                 continue
             file_path = worktree / target
             try:

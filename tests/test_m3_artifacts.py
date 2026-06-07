@@ -23,12 +23,12 @@ FIXTURES_VALID = Path(__file__).parent / "fixtures" / "valid"
 
 def test_worktree_manifest_existing_fixture_still_valid() -> None:
     doc = json.loads((FIXTURES_VALID / "worktree_manifest" / "basic.json").read_text())
-    validate_artifact("worktree_manifest", doc)  # Must not raise.
+    assert validate_artifact("worktree_manifest", doc) == []
 
 
 def test_validation_results_existing_fixture_still_valid() -> None:
     doc = json.loads((FIXTURES_VALID / "validation_results" / "basic.json").read_text())
-    validate_artifact("validation_results", doc)  # Must not raise.
+    assert validate_artifact("validation_results", doc) == []
 
 
 # ---------------------------------------------------------------------------
@@ -49,7 +49,7 @@ def test_worktree_manifest_with_m3_execution_fields() -> None:
             ],
         }
     ]
-    validate_artifact("worktree_manifest", doc)
+    assert validate_artifact("worktree_manifest", doc) == []
 
 
 def test_worktree_manifest_with_rollback_status() -> None:
@@ -59,7 +59,14 @@ def test_worktree_manifest_with_rollback_status() -> None:
     doc["touched_files"] = ["src/app.py"]
     doc["validation_status"] = "failed"
     doc["rollback_status"] = "success"
-    validate_artifact("worktree_manifest", doc)
+    assert validate_artifact("worktree_manifest", doc) == []
+
+
+def test_worktree_manifest_accepts_agent_error_status() -> None:
+    doc = json.loads((FIXTURES_VALID / "worktree_manifest" / "basic.json").read_text())
+    doc["execution_status"] = "agent_error"
+    doc["validation_status"] = "failed"
+    assert validate_artifact("worktree_manifest", doc) == []
 
 
 def test_worktree_manifest_rejects_unknown_execution_status() -> None:
@@ -76,7 +83,7 @@ def test_validation_results_with_timing_fields() -> None:
     doc["results"][0]["duration_seconds"] = 1.23
     doc["results"][0]["timed_out"] = False
     doc["results"][0]["policy_allowed"] = True
-    validate_artifact("validation_results", doc)
+    assert validate_artifact("validation_results", doc) == []
 
 
 def test_validation_results_rejects_empty_results_array() -> None:

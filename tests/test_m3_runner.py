@@ -178,3 +178,37 @@ def test_timestamps_present(tmp_path: Path) -> None:
     result = runner.run_command("CMD-001", ["python3", "ts.py"], tmp_path)
     assert result.started_at
     assert result.finished_at
+
+
+# ---------------------------------------------------------------------------
+# Timeout cap enforcement
+# ---------------------------------------------------------------------------
+
+def test_timeout_exceeding_policy_cap_is_blocked(tmp_path: Path) -> None:
+    """High-priority fix: timeout_seconds > max_timeout_seconds must be blocked."""
+    policy = CommandPolicy.from_dict({
+        "allowed_binaries": ["python3"],
+        "max_timeout_seconds": 30,
+    })
+    runner = ValidationRunner(policy=policy)
+    script = tmp_path / "ok.py"
+    script.write_text("pass\n", encoding="utf-8")
+    # Request 120s timeout against a 30s cap.
+    result = runner.run_command("CMD-001", ["python3", "ok.py"], tmp_path, timeout_seconds=120)
+    assert not result.policy_allowed
+    assert not result.passed
+    assert "policy blocked" in result.stderr_excerpt.lower()
+    assert result.exit_code == -1
+
+
+def test_timeout_within_policy_cap_is_allowed(tmp_path: Path) -> None:
+    policy = CommandPolicy.from_dict({
+        "allowed_binaries": ["python3"],
+        "max_timeout_seconds": 600,
+    })
+    runner = ValidationRunner(policy=policy)
+    script = tmp_path / "ok.py"
+    script.write_text("pass\n", encoding="utf-8")
+    result = runner.run_command("CMD-001", ["python3", "ok.py"], tmp_path, timeout_seconds=60)
+    assert result.policy_allowed
+    assert result.passed

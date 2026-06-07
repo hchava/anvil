@@ -73,6 +73,7 @@
         "scope_violation",
         "secret_detected",
         "validation_failed",
+        "agent_error",
         "rollback_error"
       ]
     },

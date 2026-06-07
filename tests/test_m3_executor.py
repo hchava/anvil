@@ -501,8 +501,29 @@ def test_validation_results_schema_valid(tmp_path, registry):
     executor.execute(_agent_writes_nothing)
 
     doc = json.loads((run_dir / "validation_results.json").read_text())
-    # Must not raise.
-    validate_artifact("validation_results", doc)
+    assert validate_artifact("validation_results", doc) == []
+
+
+def test_worktree_manifest_schema_valid(tmp_path, registry):
+    repo, worktree, run_dir = _setup_run(tmp_path, registry)
+    executor = _make_executor(
+        registry, worktree, run_dir, _make_work_order(), "repo-my-service"
+    )
+    executor.execute(_agent_writes_nothing)
+
+    doc = json.loads((run_dir / "worktree_manifest.json").read_text())
+    assert validate_artifact("worktree_manifest", doc) == []
+
+
+def test_worktree_manifest_schema_valid_on_scope_violation(tmp_path, registry):
+    """Manifest written on failure paths must also be schema-valid."""
+    repo, worktree, run_dir = _setup_run(tmp_path, registry)
+    work_order = _make_work_order(allowed_files=["src/app.py"])
+    executor = _make_executor(registry, worktree, run_dir, work_order, "repo-my-service")
+    executor.execute(_agent_writes_out_of_scope_file)
+
+    doc = json.loads((run_dir / "worktree_manifest.json").read_text())
+    assert validate_artifact("worktree_manifest", doc) == []
 
 
 def test_file_ownership_in_manifest(tmp_path, registry):
@@ -516,3 +537,57 @@ def test_file_ownership_in_manifest(tmp_path, registry):
     paths = {e["file_path"] for e in doc["file_ownership"]}
     assert "src/app.py" in paths
     assert "src/config.py" in paths
+
+
+# ---------------------------------------------------------------------------
+# Blocker repro tests (guard regressions on the four fixed issues)
+# ---------------------------------------------------------------------------
+
+def test_partial_lease_acquisition_releases_acquired_leases(tmp_path, registry):
+    """Blocker 2 repro: if the 2nd file conflicts, the 1st lease must be released."""
+    repo, worktree, run_dir = _setup_run(tmp_path, registry, "RUN-20260607-010")
+
+    # Grab a conflicting lease on config.py from a different run.
+    registry.create_run("RUN-20260607-011", "proj-my-service", "repo-my-service", "other")
+    registry.activate_run("RUN-20260607-011")
+    registry.acquire_lease("RUN-20260607-011", "repo-my-service", "file_write", "src/config.py")
+
+    # Request app.py (OK) and config.py (conflicts).
+    work_order = _make_work_order(
+        allowed_files=["src/app.py", "src/config.py"],
+        work_order_id="EXEC-010",
+    )
+    executor = _make_executor(
+        registry, worktree, run_dir, work_order, "repo-my-service", run_id="RUN-20260607-010"
+    )
+    result = executor.execute(_agent_writes_nothing)
+
+    assert result.status == "lease_conflict"
+    # The first lease (app.py) must have been released — only RUN-011's lease remains active.
+    active = registry.list_leases(repo_id="repo-my-service", active_only=True)
+    run_010_leases = [r for r in active if r["run_id"] == "RUN-20260607-010"]
+    assert len(run_010_leases) == 0, "Partial lease from RUN-010 must be released on conflict"
+
+
+def test_agent_exception_triggers_rollback_and_writes_artifacts(tmp_path, registry):
+    """Blocker 4 repro: an exception from execution_agent must rollback and write artifacts."""
+    repo, worktree, run_dir = _setup_run(tmp_path, registry)
+    work_order = _make_work_order(allowed_files=["src/app.py"])
+    executor = _make_executor(registry, worktree, run_dir, work_order, "repo-my-service")
+
+    def crashing_agent(wt: Path) -> None:
+        (wt / "src" / "app.py").write_text("PARTIAL WRITE\n", encoding="utf-8")
+        raise RuntimeError("agent failed mid-execution")
+
+    result = executor.execute(crashing_agent)
+
+    assert result.status in ("agent_error", "rollback_error")
+    assert result.error is not None
+    # Worktree must be restored.
+    assert (worktree / "src" / "app.py").read_text() == "VALUE = 1\n"
+    # Artifacts must be written despite the exception.
+    assert (run_dir / "worktree_manifest.json").exists()
+    assert (run_dir / "validation_results.json").exists()
+    # Leases must be released.
+    active = registry.list_leases(repo_id="repo-my-service", active_only=True)
+    assert len(active) == 0

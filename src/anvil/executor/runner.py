@@ -75,6 +75,23 @@ class ValidationRunner:
                 policy_reason=policy_result.reason,
             )
 
+        timeout_result: PolicyResult = self._policy.validate_timeout(timeout_seconds)
+        if not timeout_result.allowed:
+            return CommandResult(
+                command_id=command_id,
+                command_array=command_array,
+                exit_code=-1,
+                passed=False,
+                stdout_excerpt="",
+                stderr_excerpt=f"[policy blocked] {timeout_result.reason}",
+                started_at=started_at,
+                finished_at=now_iso(),
+                duration_seconds=0.0,
+                timed_out=False,
+                policy_allowed=False,
+                policy_reason=timeout_result.reason,
+            )
+
         timed_out = False
         start = time.monotonic()
         try:

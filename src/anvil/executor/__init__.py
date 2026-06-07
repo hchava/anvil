@@ -16,9 +16,11 @@ pre-allocated per-run worktree:
 Design principles:
   - The executor is the deterministic control plane; it never trusts
     agent-generated file paths or shell strings for rollback.
-  - Leases are always released, even on exceptions.
+  - Leases are always released, even on exceptions, including during partial
+    acquisition (all already-acquired leases are released on conflict).
   - Logs must not print secret values.
-  - Schema-validated artifacts are written on every exit path.
+  - Schema-validated artifacts are written on every exit path that performed
+    any execution (i.e., every path except lease_conflict).
 """
 
 from __future__ import annotations
@@ -51,6 +53,7 @@ class ExecutionResult:
     #   scope_violation — diff touched forbidden or out-of-scope files; rolled back
     #   secret_detected — diff contained credential patterns; rolled back
     #   validation_failed — command returned non-zero / new test failures; rolled back
+    #   agent_error     — execution_agent raised an exception; rolled back
     #   rollback_error  — rollback itself failed (partial restore)
     status: str = "pending"
     scope_result: ScopeResult | None = None
@@ -107,38 +110,56 @@ class WorkOrderExecutor:
         )
         lease_ids: list[str] = []
 
-        # --- 1. Acquire leases ------------------------------------------
         try:
+            # --- 1. Acquire leases (inside outer try so finally always runs) ---
+            # If the second file conflicts after the first was acquired, the inner
+            # except sets status and returns — the outer finally releases the
+            # already-acquired lease, preventing a leak.
             for file_path in self._allowed_files:
-                lease = self._registry.acquire_lease(
-                    run_id=self._run_id,
-                    repo_id=self._repo_id,
-                    lease_type="file_write",
-                    scope=file_path,
-                )
-                lease_ids.append(lease["lease_id"])
-            result.acquired_lease_ids = lease_ids
+                try:
+                    lease = self._registry.acquire_lease(
+                        run_id=self._run_id,
+                        repo_id=self._repo_id,
+                        lease_type="file_write",
+                        scope=file_path,
+                    )
+                    lease_ids.append(lease["lease_id"])
+                except Exception as exc:
+                    result.status = "lease_conflict"
+                    result.error = str(exc)
+                    self._event_log.append(
+                        "execution_blocked",
+                        details={"work_order_id": self._work_order_id, "reason": str(exc)},
+                    )
+                    return result  # outer finally releases already-acquired leases
+
+            result.acquired_lease_ids = list(lease_ids)
             self._ownership.track_work_order(
                 self._work_order_id, self._allowed_files, sequence=1
             )
-        except Exception as exc:
-            result.status = "lease_conflict"
-            result.error = str(exc)
-            self._event_log.append(
-                "execution_blocked",
-                details={"work_order_id": self._work_order_id, "reason": str(exc)},
-            )
-            return result
 
-        try:
-            # --- 2. Run execution agent ---------------------------------
+            # --- 2. Run execution agent -----------------------------------------
             self._event_log.append(
                 "execution_started",
                 details={"work_order_id": self._work_order_id},
             )
-            execution_agent(self._worktree)
+            try:
+                execution_agent(self._worktree)
+            except Exception as exc:
+                # Agent raised — clean up whatever it wrote and record the error.
+                result.status = "agent_error"
+                result.error = str(exc)
+                scope_result = check_scope(
+                    self._worktree, self._allowed_files, self._forbidden_files
+                )
+                result.scope_result = scope_result
+                result.touched_files = scope_result.touched_files
+                result.rollback_result = self._do_rollback(scope_result)
+                if not result.rollback_result.success:
+                    result.status = "rollback_error"
+                return result
 
-            # --- 3. Scope enforcement -----------------------------------
+            # --- 3. Scope enforcement -------------------------------------------
             scope_result = check_scope(
                 self._worktree, self._allowed_files, self._forbidden_files
             )
@@ -159,7 +180,7 @@ class WorkOrderExecutor:
                     result.status = "rollback_error"
                 return result
 
-            # --- 4. Secret scan -----------------------------------------
+            # --- 4. Secret scan -------------------------------------------------
             diff_text = self._get_full_diff()
             scan_result = scan_diff(diff_text)
             result.scan_result = scan_result
@@ -180,7 +201,7 @@ class WorkOrderExecutor:
                     result.status = "rollback_error"
                 return result
 
-            # --- 5. Validation commands ---------------------------------
+            # --- 5. Validation commands -----------------------------------------
             command_results = self._runner.run_all(
                 self._validation_commands,
                 cwd=self._worktree,
@@ -188,7 +209,7 @@ class WorkOrderExecutor:
             )
             result.command_results = command_results
 
-            # --- 6. Baseline comparison ---------------------------------
+            # --- 6. Baseline comparison -----------------------------------------
             new_failures = self._compute_new_failures(command_results)
             result.new_failures = new_failures
 
@@ -219,7 +240,7 @@ class WorkOrderExecutor:
         finally:
             # --- Always release leases and write artifacts ---------------
             # This finally block runs on every exit path (success, all
-            # failure modes, and exceptions), so artifacts and lease
+            # failure modes, exceptions, and early returns), so lease
             # releases are guaranteed regardless of which branch was taken.
             release_reason = "released" if result.status == "success" else "aborted"
             for lease_id in lease_ids:
@@ -228,9 +249,10 @@ class WorkOrderExecutor:
                 except Exception:
                     pass  # Best-effort; don't mask the primary result.
 
-            # Write artifacts for every exit path except lease_conflict
-            # (which returned before this try block and has no execution data).
-            if result.status != "pending":
+            # Write artifacts for every exit path that performed execution.
+            # Skip pending (exception before any work) and lease_conflict
+            # (no execution happened — no meaningful artifact to write).
+            if result.status not in ("pending", "lease_conflict"):
                 self._write_worktree_manifest(result)
                 self._write_validation_results(result)
 
@@ -273,6 +295,36 @@ class WorkOrderExecutor:
         ).stdout
         return unstaged + staged
 
+    def _get_head_commit(self) -> str:
+        try:
+            out = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=str(self._worktree),
+                capture_output=True,
+                text=True,
+                check=False,
+            ).stdout.strip()
+            if out and len(out) >= 7:
+                return out
+        except Exception:
+            pass
+        return "0" * 40  # Valid per pattern ^[0-9a-f]{7,40}$
+
+    def _get_branch(self) -> str:
+        try:
+            out = subprocess.run(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                cwd=str(self._worktree),
+                capture_output=True,
+                text=True,
+                check=False,
+            ).stdout.strip()
+            if out and out != "HEAD":
+                return out
+        except Exception:
+            pass
+        return f"anvil/{self._repo_id}/{self._run_id}"
+
     def _do_rollback(self, scope_result: ScopeResult) -> RollbackResult:
         primitives = build_rollback_primitives(
             modified_tracked=scope_result.modified_tracked,
@@ -303,8 +355,21 @@ class WorkOrderExecutor:
             try:
                 doc = json.loads(manifest_path.read_text(encoding="utf-8"))
             except json.JSONDecodeError:
-                pass
+                doc = {}
 
+        # Ensure required schema fields are present in case no prior manifest exists
+        # (worktree allocation normally pre-creates this; these defaults are a safety net).
+        doc.setdefault("run_id", self._run_id)
+        doc.setdefault("schema_version", "1.0.0")
+        doc.setdefault("created_at", now_iso())
+        doc.setdefault("worktree_id", f"wt-{self._run_id}")
+        doc.setdefault("base_repo", self._repo_id)
+        doc.setdefault("base_commit", self._get_head_commit())
+        doc.setdefault("branch", self._get_branch())
+        doc.setdefault("path", str(self._worktree))
+        doc.setdefault("status", "active")
+
+        # M3 execution fields (always overwrite to reflect current result).
         doc["work_order_id"] = result.work_order_id
         doc["execution_status"] = result.status
         doc["touched_files"] = result.touched_files
