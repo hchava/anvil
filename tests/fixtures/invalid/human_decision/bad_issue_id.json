@@ -1,11 +1,11 @@
 {
   "decision_id": "DEC-001",
   "run_id": "RUN-20260527-001",
-  "issue_id": "ISSUE-1x",
+  "issue_ids": ["ISSUE-1x"],
   "decision": "approve",
   "rationale": "30s ceiling acceptable for the ingestion SLA.",
   "approved_by": "demo-user",
-  "timestamp": "2026-05-27T15:30:00Z",
+  "created_at": "2026-05-27T15:30:00Z",
   "expires_after_run": true,
   "content_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
 }

@@ -1,0 +1,9 @@
+{
+  "reviewer_id": "codex-contract-rev",
+  "attempt_id": "ATT-001",
+  "run_id": "RUN-20260606-001",
+  "decision": "co-sign",
+  "rationale": "Contract is clear, well-scoped, and risk is acceptable.",
+  "risk_score_agreement": "agree",
+  "reviewed_at": "2026-06-06T12:05:00Z"
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anvil.dev/schemas/agent_task.schema.json",
+  "title": "Agent Task",
+  "description": "Task written by the controller into agents/{agent_id}/agent_task.json. Immutable for the lifetime of the attempt.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["agent_id", "attempt_id", "task_type", "run_id", "prompt", "output_schema", "created_at"],
+  "properties": {
+    "agent_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "attempt_id": {
+      "type": "string",
+      "pattern": "^ATT-[0-9]{3,}$"
+    },
+    "task_type": {
+      "type": "string",
+      "enum": ["task_contract_generation", "task_contract_review", "risk_cosign", "generic"]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prompt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "context": {
+      "type": "object"
+    },
+    "output_schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "redaction_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}
