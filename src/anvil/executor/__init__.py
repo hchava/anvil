@@ -139,13 +139,28 @@ class WorkOrderExecutor:
             )
 
             # --- 2. Run execution agent -----------------------------------------
+            repo_path = self._get_registered_repo_path()
+            repo_status_before = self._snapshot_repo_status(repo_path)
+
+            # Fail closed before the agent runs if the pre-execution probe failed.
+            # Running the agent without a valid baseline snapshot means we cannot
+            # detect contamination afterward — so the agent must not execute.
+            if repo_status_before is None:
+                self._event_log.append(
+                    "checkout_contaminated",
+                    details={
+                        "work_order_id": self._work_order_id,
+                        "reason": "pre-execution checkout probe failed — agent not started",
+                    },
+                )
+                result.status = "checkout_contaminated"
+                result.error = "pre-execution checkout probe failed — cannot verify registered checkout integrity"
+                return result
+
             self._event_log.append(
                 "execution_started",
                 details={"work_order_id": self._work_order_id},
             )
-            repo_path = self._get_registered_repo_path()
-            repo_status_before = self._snapshot_repo_status(repo_path)
-
             try:
                 execution_agent(self._worktree)
             except Exception as exc:
@@ -164,21 +179,20 @@ class WorkOrderExecutor:
 
             # --- 2a. Checkout isolation check -----------------------------------
             # Verify the execution agent did not write to the registered normal
-            # checkout (outside the worktree).  Fail closed on two conditions:
-            #   (a) the probe itself failed (checkout integrity cannot be verified)
-            #   (b) the checkout changed (contamination detected)
+            # checkout (outside the worktree).  Fail closed if the post-execution
+            # probe fails or if the checkout changed.
             repo_status_after = self._snapshot_repo_status(repo_path)
 
-            probe_failed = repo_status_before is None or repo_status_after is None
-            contaminated = (not probe_failed) and (repo_status_after != repo_status_before)
+            post_probe_failed = repo_status_after is None
+            contaminated = (not post_probe_failed) and (repo_status_after != repo_status_before)
 
-            if probe_failed or contaminated:
-                if probe_failed:
+            if post_probe_failed or contaminated:
+                if post_probe_failed:
                     details: dict[str, Any] = {
                         "work_order_id": self._work_order_id,
-                        "reason": "checkout isolation probe failed — cannot verify integrity",
+                        "reason": "post-execution checkout probe failed — cannot verify integrity",
                     }
-                    result.error = "checkout isolation probe failed — cannot verify registered checkout integrity"
+                    result.error = "post-execution checkout probe failed — cannot verify registered checkout integrity"
                 else:
                     # Log counts and categories only — never raw paths or filenames.
                     details = {

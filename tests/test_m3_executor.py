@@ -598,22 +598,27 @@ def test_checkout_contamination_logged(tmp_path, registry):
     assert "dirty_categories" in details
 
 
-def test_checkout_probe_failure_fails_closed(tmp_path, registry):
-    """Fix 2 repro: if the checkout probe can't run, executor must fail closed."""
+def test_checkout_probe_failure_blocks_agent(tmp_path, registry):
+    """Pre-execution probe failure must block the agent from running entirely."""
     repo, worktree, run_dir = _setup_run(tmp_path, registry)
     executor = _make_executor(
         registry, worktree, run_dir, _make_work_order(), "repo-my-service"
     )
 
-    # Simulate a broken git probe: make _snapshot_repo_status always return None.
-    original_snapshot = executor._snapshot_repo_status
+    agent_invoked = []
+
+    def tracking_agent(wt: Path) -> None:
+        agent_invoked.append(True)
+
+    # Simulate a broken pre-execution probe.
     executor._snapshot_repo_status = lambda _path: None  # type: ignore[method-assign]
 
-    result = executor.execute(_agent_writes_nothing)
+    result = executor.execute(tracking_agent)
 
     assert result.status in ("checkout_contaminated", "rollback_error"), (
         f"Expected checkout_contaminated on probe failure but got {result.status!r}"
     )
+    assert not agent_invoked, "Agent must not be invoked when pre-execution probe fails"
 
 
 def test_clean_agent_passes_checkout_check(tmp_path, registry):
