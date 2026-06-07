@@ -46,7 +46,14 @@
         "issue_deferred",
         "contract_amended",
         "run_aborted",
-        "run_finalized"
+        "run_finalized",
+        "execution_started",
+        "execution_success",
+        "execution_blocked",
+        "scope_violation",
+        "secret_detected",
+        "validation_failed",
+        "checkout_contaminated"
       ]
     },
     "actor": {

@@ -59,6 +59,60 @@
     "status": {
       "type": "string",
       "enum": ["active", "merged", "discarded"]
+    },
+    "work_order_id": {
+      "type": "string",
+      "pattern": "^EXEC-(INT-)?[0-9]{3,}$"
+    },
+    "execution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "success",
+        "lease_conflict",
+        "scope_violation",
+        "secret_detected",
+        "validation_failed",
+        "agent_error",
+        "checkout_contaminated",
+        "rollback_error"
+      ]
+    },
+    "touched_files": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "validation_status": {
+      "type": "string",
+      "enum": ["passed", "failed", "pending"]
+    },
+    "rollback_status": {
+      "type": "string",
+      "enum": ["success", "failed", "not_needed"]
+    },
+    "file_ownership": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file_path", "owners"],
+        "properties": {
+          "file_path": { "type": "string", "minLength": 1 },
+          "owners": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["work_order_id", "access", "sequence"],
+              "properties": {
+                "work_order_id": { "type": "string", "minLength": 1 },
+                "access": { "type": "string", "enum": ["read", "write"] },
+                "sequence": { "type": "integer", "minimum": 1 }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
