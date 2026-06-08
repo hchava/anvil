@@ -55,6 +55,7 @@ class ValidationRunner:
         command_array: list[str],
         cwd: Path,
         timeout_seconds: int = 60,
+        expected_exit_code: int = 0,
     ) -> CommandResult:
         policy_result: PolicyResult = self._policy.validate(command_array)
         started_at = now_iso()
@@ -121,7 +122,7 @@ class ValidationRunner:
             )
 
         duration = time.monotonic() - start
-        passed = exit_code == 0 and not timed_out
+        passed = exit_code == expected_exit_code and not timed_out
 
         is_pytest = any("pytest" in p for p in command_array[:2])
         identities = normalize_pytest_identities(stdout) if is_pytest else []
@@ -153,5 +154,8 @@ class ValidationRunner:
             command_array = cmd_spec["command_array"]
             command_id = cmd_spec.get("label", f"CMD-{i + 1:03d}")
             timeout = cmd_spec.get("timeout_seconds", default_timeout)
-            results.append(self.run_command(command_id, command_array, cwd, timeout))
+            expected_exit_code = cmd_spec.get("expected_exit_code", 0)
+            results.append(
+                self.run_command(command_id, command_array, cwd, timeout, expected_exit_code)
+            )
         return results

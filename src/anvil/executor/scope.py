@@ -61,12 +61,25 @@ def _git_untracked(worktree: Path) -> list[str]:
     return [p for p in result.stdout.splitlines() if p.strip()]
 
 
+def _validate_scope_paths(label: str, paths: list[str]) -> None:
+    """Reject absolute paths and traversal sequences before they reach git commands."""
+    for p in paths:
+        if PurePosixPath(p).is_absolute() or Path(p).is_absolute():
+            raise ValueError(f"{label} contains an absolute path: {p!r}")
+        parts = PurePosixPath(p).parts
+        if ".." in parts:
+            raise ValueError(f"{label} contains a path traversal sequence: {p!r}")
+
+
 def check_scope(
     worktree: Path,
     allowed_files: list[str],
     forbidden_files: list[str],
 ) -> ScopeResult:
     """Return a ScopeResult describing whether the worktree diff is within scope."""
+    _validate_scope_paths("allowed_files", allowed_files)
+    _validate_scope_paths("forbidden_files", forbidden_files)
+
     modified = _git_modified(worktree)
     untracked = _git_untracked(worktree)
 
