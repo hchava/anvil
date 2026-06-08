@@ -38,6 +38,10 @@ from ..controller.scorecard import build_scorecard
 from ..discovery import discover_sources
 from ..errors import AnvilError
 from ..executor import WorkOrderExecutor
+from ..executor.parallel import (
+    IntegrationWorkOrderMissingError,
+    MultiWorkOrderExecutor,
+)
 from ..registry import Registry
 from ..schemas_util import assert_valid, validate_artifact
 from ..timeutil import now_iso
@@ -142,6 +146,7 @@ class StandardModeRunner:
         self._history: list[dict[str, str]] = []
         self._agents_launched = 0
         self._baseline_green = True
+        self._multi_wo = False
 
     # ------------------------------------------------------------------
     # Public entry point
@@ -155,6 +160,7 @@ class StandardModeRunner:
         scope = self._resolve_scope(inputs)
         worktree_raw = run_row.get("worktree_path")
         worktree = Path(worktree_raw) if worktree_raw else self._run_dir
+        self._multi_wo = inputs.multi_wo
 
         # — INIT —
         self._transition(states.INIT)
@@ -695,7 +701,9 @@ class StandardModeRunner:
         worktree: Path,
         run_row: dict[str, Any],
     ) -> Any:
-        """Execute the first agreed required work order via WorkOrderExecutor."""
+        """Execute work orders via WorkOrderExecutor (single-WO) or
+        MultiWorkOrderExecutor (multi-WO).
+        """
         if self._agents.execution_agent is None:
             raise StandardModeError("execution_agent is required for Standard Mode")
 
@@ -711,14 +719,49 @@ class StandardModeRunner:
                 "before execution; none found"
             )
 
-        # M4 executes the first agreed required work order.
-        work_order = agreed_required[0]
         baseline_tests_path = self._run_dir / "baseline_tests.json"
         baseline_tests: list[dict[str, Any]] = []
         if baseline_tests_path.exists():
             raw = json.loads(baseline_tests_path.read_text(encoding="utf-8"))
             baseline_tests = raw.get("tests", []) if isinstance(raw, dict) else raw
 
+        # --- Multi-WO path ---
+        if self._multi_wo:
+            repo = self.registry.get_repo(run_row["repo_id"])
+            try:
+                multi_executor = MultiWorkOrderExecutor(
+                    run_id=self.run_id,
+                    run_dir=self._run_dir,
+                    repo_id=run_row["repo_id"],
+                    repo_path=Path(repo["path"]),
+                    base_commit=run_row["base_commit"],
+                    worktrees_dir=self.registry.paths.worktrees_dir,
+                    main_worktree_path=worktree,
+                    main_branch=run_row.get("branch") or f"anvil/{self.run_id}",
+                    registry=self.registry,
+                    event_log=self._events,
+                    policy=self._policy,
+                    baseline_tests=baseline_tests,
+                )
+                multi_result = multi_executor.execute(
+                    work_orders, self._agents.execution_agent
+                )
+            except IntegrationWorkOrderMissingError as exc:
+                raise StandardModeError(str(exc)) from exc
+            except Exception as exc:
+                raise StandardModeError(
+                    f"Multi-WO execution failed: {exc}"
+                ) from exc
+
+            if not multi_result.overall_passed:
+                raise StandardModeError(
+                    f"Multi-WO execution did not pass: "
+                    f"error={multi_result.error or 'see work_order_entries'}"
+                )
+            return multi_result
+
+        # --- Single-WO path (M3/M4 behaviour) ---
+        work_order = agreed_required[0]
         executor = WorkOrderExecutor(
             run_id=self.run_id,
             run_dir=self._run_dir,

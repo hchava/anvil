@@ -284,7 +284,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["file_path", "work_order_id"],
+        "required": ["file_path", "work_order_id", "access", "sequence"],
         "properties": {
           "file_path": {
             "type": "string",
@@ -293,6 +293,16 @@
           "work_order_id": {
             "type": "string",
             "pattern": "^EXEC-(INT-)?[0-9]{3,}$"
+          },
+          "access": {
+            "type": "string",
+            "enum": ["read", "write"],
+            "description": "Whether this work order reads or writes the file."
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Execution order among work orders writing the same file. Lower numbers execute first."
           },
           "lock_status": {
             "type": "string",

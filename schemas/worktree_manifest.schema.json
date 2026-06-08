@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://anvil.dev/schemas/worktree_manifest.schema.json",
   "title": "Worktree Manifest",
-  "description": "Description of a scoped git worktree allocated for a run.",
+  "description": "Description of a scoped git worktree allocated for a run. Extended in Milestone 5 with per-work-order entries, integration branch tracking, and merge status.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -110,6 +110,106 @@
                 "sequence": { "type": "integer", "minimum": 1 }
               }
             }
+          }
+        }
+      }
+    },
+    "repo_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Milestone 5: repo_id for multi-WO runs."
+    },
+    "integration_branch": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Milestone 5: integration branch name."
+    },
+    "integration_branch_ref": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$",
+      "description": "Milestone 5: HEAD SHA of integration branch after all merges."
+    },
+    "work_order_entries": {
+      "type": "array",
+      "description": "Milestone 5: per-work-order execution and merge status.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["work_order_id", "execution_status"],
+        "properties": {
+          "work_order_id": {
+            "type": "string",
+            "pattern": "^EXEC-(INT-)?[0-9]{3,}$"
+          },
+          "branch": { "type": "string", "minLength": 1 },
+          "worktree_path": { "type": "string", "minLength": 1 },
+          "patch_path": { "type": "string" },
+          "execution_status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "success",
+              "lease_conflict",
+              "scope_violation",
+              "secret_detected",
+              "validation_failed",
+              "agent_error",
+              "checkout_contaminated",
+              "rollback_error",
+              "skipped",
+              "blocked_by_dependency"
+            ]
+          },
+          "merge_status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "merged",
+              "conflict",
+              "rejected",
+              "skipped",
+              "not_applicable"
+            ]
+          },
+          "validation_status": {
+            "type": "string",
+            "enum": ["pending", "passed", "failed"]
+          },
+          "rollback_status": {
+            "type": "string",
+            "enum": ["success", "failed", "not_needed"]
+          },
+          "touched_files": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "merge_conflict_detail": { "type": "string" }
+        }
+      }
+    },
+    "dependency_order": {
+      "type": "array",
+      "description": "Milestone 5: work order IDs in topological execution order.",
+      "items": {
+        "type": "string",
+        "pattern": "^EXEC-(INT-)?[0-9]{3,}$"
+      }
+    },
+    "merge_conflict_details": {
+      "type": "array",
+      "description": "Milestone 5: records of merge conflicts detected during integration.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["work_order_id", "conflict_files"],
+        "properties": {
+          "work_order_id": {
+            "type": "string",
+            "pattern": "^EXEC-(INT-)?[0-9]{3,}$"
+          },
+          "conflict_files": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
           }
         }
       }

@@ -97,12 +97,20 @@ class WorkOrderExecutor:
     # Public interface
     # ------------------------------------------------------------------
 
-    def execute(self, execution_agent: Callable[[Path], None]) -> ExecutionResult:
+    def execute(
+        self,
+        execution_agent: Callable[[Path], None],
+        write_artifacts: bool = True,
+    ) -> ExecutionResult:
         """Run the full work order pipeline and return a structured result.
 
         ``execution_agent`` is a callable that writes the work order's
         output into the worktree.  In production this wraps a real agent;
         in tests it is a FakeExecutionAgent that writes specific files.
+
+        ``write_artifacts`` controls whether worktree_manifest.json and
+        validation_results.json are written on exit.  Set to False when the
+        caller (e.g. MultiWorkOrderExecutor) aggregates results itself.
         """
         result = ExecutionResult(
             work_order_id=self._work_order_id,
@@ -308,7 +316,8 @@ class WorkOrderExecutor:
             # Write artifacts for every exit path that performed execution.
             # Skip pending (exception before any work) and lease_conflict
             # (no execution happened — no meaningful artifact to write).
-            if result.status not in ("pending", "lease_conflict"):
+            # Skip when write_artifacts=False (caller aggregates itself).
+            if write_artifacts and result.status not in ("pending", "lease_conflict"):
                 self._write_worktree_manifest(result)
                 self._write_validation_results(result)
 
