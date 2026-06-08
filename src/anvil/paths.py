@@ -82,5 +82,19 @@ class AnvilPaths:
         """Per-run worktree: ``{home}/worktrees/{repo_id}/{run_id}``."""
         return self.worktrees_dir / repo_id / run_id
 
+    def wo_worktree_path(self, repo_id: str, run_id: str, work_order_id: str) -> Path:
+        """Per-WO worktree (Milestone 5): ``{home}/worktrees/{repo_id}/{run_id}--wo-{work_order_id}``.
+
+        The double-dash separates the run_id from the work-order suffix so the
+        directory is a sibling of the primary run worktree, not nested inside it
+        (git does not allow nested worktrees).
+        """
+        safe_id = work_order_id.replace("/", "-").replace(":", "-")
+        return self.worktrees_dir / repo_id / f"{run_id}--wo-{safe_id}"
+
+    def integration_worktree_path(self, repo_id: str, run_id: str) -> Path:
+        """Integration worktree (Milestone 5): ``{home}/worktrees/{repo_id}/{run_id}--integration``."""
+        return self.worktrees_dir / repo_id / f"{run_id}--integration"
+
     def exists(self) -> bool:
         return self.installation_json.exists() and self.registry_db.exists()

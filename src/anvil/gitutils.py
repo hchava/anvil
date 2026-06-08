@@ -144,3 +144,84 @@ def restore_tracked(path: Path, files: set[str]) -> None:
         _run(["checkout", "--", *targets], cwd=path)
     except GitError:  # pragma: no cover - best effort
         pass
+
+
+# ---------------------------------------------------------------------------
+# Milestone 5 helpers
+# ---------------------------------------------------------------------------
+
+
+def create_branch_at(repo_path: Path, branch: str, commit: str) -> None:
+    """Create a new branch at *commit* without checking it out."""
+    _run(["branch", branch, commit], cwd=repo_path)
+
+
+def commit_all(worktree_path: Path, message: str) -> str:
+    """Stage all changes in *worktree_path* and create a commit.
+
+    Returns the new HEAD commit SHA. Uses --allow-empty so callers do not
+    need to check whether the agent actually changed any files.
+    """
+    _run(["add", "-A"], cwd=worktree_path)
+    _run(["commit", "--allow-empty", "-m", message], cwd=worktree_path)
+    return _run(["rev-parse", "HEAD"], cwd=worktree_path)
+
+
+class MergeResult:
+    """Result of a git merge operation."""
+
+    def __init__(
+        self,
+        *,
+        success: bool,
+        conflict_files: list[str] | None = None,
+        new_head: str = "",
+    ) -> None:
+        self.success = success
+        self.conflict_files: list[str] = conflict_files or []
+        self.new_head = new_head
+
+
+def merge_branch_into(
+    integration_worktree: Path,
+    source_branch: str,
+    message: str | None = None,
+) -> MergeResult:
+    """Merge *source_branch* into the branch currently checked out in
+    *integration_worktree*.
+
+    On conflict: aborts the merge and returns the list of conflicting files.
+    Never leaves the worktree in a mid-merge state on return.
+    """
+    import subprocess as _subprocess
+
+    merge_msg = message or f"Merge {source_branch}"
+    result = _subprocess.run(
+        ["git", "merge", "--no-ff", "-m", merge_msg, source_branch],
+        cwd=str(integration_worktree),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        new_head = _run(["rev-parse", "HEAD"], cwd=integration_worktree)
+        return MergeResult(success=True, new_head=new_head)
+
+    # Collect conflicting files before aborting.
+    conflict_result = _subprocess.run(
+        ["git", "diff", "--name-only", "--diff-filter=U"],
+        cwd=str(integration_worktree),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    conflict_files = [f for f in conflict_result.stdout.splitlines() if f.strip()]
+
+    # Abort to restore a clean state.
+    _subprocess.run(
+        ["git", "merge", "--abort"],
+        cwd=str(integration_worktree),
+        capture_output=True,
+        check=False,
+    )
+    return MergeResult(success=False, conflict_files=conflict_files)
