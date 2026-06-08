@@ -94,7 +94,7 @@ class StandardModeAgents:
     # Returns list of finding dicts; empty list == no findings.
     blindspot_agent: Callable[[dict[str, Any]], list[dict[str, Any]]] | None = None
 
-    # Layer 4 — implementation plan text (optional — placeholder used when None)
+    # Layer 4 — implementation plan text (required for Standard Mode)
     plan_agent: Callable[[dict[str, Any]], str] | None = None
 
     # Layer 5 — plan review (keyed by reviewer type)
