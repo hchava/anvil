@@ -114,7 +114,9 @@
     {
       "file_path": "src/ingestion/config.py",
       "work_order_id": "EXEC-001",
-      "lock_status": "locked"
+      "lock_status": "locked",
+      "access": "write",
+      "sequence": 1
     }
   ]
 }
